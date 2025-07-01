@@ -139,7 +139,10 @@ async function loadTimeSlots(dateString) {
     try {
         showLoading(true);
         const response = await fetch(`/api/disponibilita/${dateString}`);
-        const slots = await response.json();
+        const data = await response.json();
+        
+        // Gestisce sia array che oggetto (per compatibilità Netlify)
+        const slots = Array.isArray(data) ? data : (data.body ? JSON.parse(data.body) : []);
         
         let slotsHTML = '';
         slots.forEach(slot => {

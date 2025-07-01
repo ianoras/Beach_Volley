@@ -4,6 +4,16 @@ let selectedDate = null;
 let selectedTime = null;
 let config = {};
 
+// Funzione per ottenere l'URL base delle API
+function getApiBaseUrl() {
+    // Se siamo su Netlify (produzione), usa le funzioni serverless
+    if (window.location.hostname.includes('netlify.app') || window.location.hostname.includes('netlify.com')) {
+        return '/.netlify/functions/api';
+    }
+    // Altrimenti usa il server locale
+    return '/api';
+}
+
 // Elementi DOM
 const calendarDays = document.getElementById('calendarDays');
 const currentMonthEl = document.getElementById('currentMonth');
@@ -36,7 +46,7 @@ async function initApp() {
 // Carica configurazioni
 async function loadConfig() {
     try {
-        const response = await fetch('/api/config');
+        const response = await fetch(`${getApiBaseUrl()}/config`);
         if (!response.ok) {
             throw new Error('API non disponibile');
         }
@@ -297,7 +307,7 @@ async function loadTimeSlots(dateString) {
         showLoading(true);
         console.log('Caricamento orari per:', dateString);
         
-        const response = await fetch(`/api/disponibilita/${dateString}`);
+        const response = await fetch(`${getApiBaseUrl()}/disponibilita/${dateString}`);
         
         if (!response.ok) {
             throw new Error(`API non disponibile: ${response.status}`);
@@ -461,7 +471,7 @@ async function handleBookingSubmit(e) {
         
         // Prova a inviare al server se disponibile
         try {
-            const response = await fetch('/api/prenotazioni', {
+            const response = await fetch(`${getApiBaseUrl()}/prenotazioni`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'

@@ -136,17 +136,8 @@
                     document.getElementById('password').value = '';
                 }
             } catch (error) {
-                console.log('API non disponibile, usando modalità test locale');
-                
-                // Modalità test locale - password di test
-                if (password === 'admin123') {
-                    alert('Modalità test locale attivata! Password: admin123');
-                    sessionStorage.setItem('adminAuthenticated', 'true');
-                    sessionStorage.setItem('localTestMode', 'true');
-                    window.location.href = '/admin';
-                } else {
-                    alert('Password test: admin123 (modalità locale)');
-                }
+                console.error('Errore login:', error);
+                alert('Errore durante la verifica. Riprova più tardi.');
             } finally {
                 // Riabilita il bottone
                 submitButton.disabled = false;

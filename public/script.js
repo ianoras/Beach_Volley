@@ -194,57 +194,12 @@ async function loadTimeSlots(dateString) {
         }
         showLoading(false);
     } catch (error) {
-        console.log('Usando orari di esempio (modalità locale)');
-        // Genera orari di esempio per il beach volley (16:00-23:00) - tutti liberi
-        const orari = [];
-        const now = new Date();
-        const currentHour = now.getHours();
-        
-        // Controlla se ci sono orari bloccati in modalità test
-        const testSchedule = JSON.parse(sessionStorage.getItem('testSchedule') || '{}');
-        const dateSchedule = testSchedule[dateString] || {};
-        
-        for (let hour = 16; hour <= 22; hour++) {
-            // Se è oggi, mostra solo orari futuri
-            const isToday = selectedDate && selectedDate.toDateString() === now.toDateString();
-            const isFutureHour = hour > currentHour;
-            
-            if (!isToday || isFutureHour) {
-                const orario = `${hour.toString().padStart(2, '0')}:00`;
-                const savedStatus = dateSchedule[orario] || 'libero';
-                
-                orari.push({
-                    orario: orario,
-                    disponibile: savedStatus === 'libero'
-                });
-            }
-        }
-        
-        let slotsHTML = '';
-        orari.forEach(slot => {
-            const slotClass = slot.disponibile ? 'time-slot' : 'time-slot occupied';
-            const savedStatus = dateSchedule[slot.orario] || 'libero';
-            let slotText = slot.orario;
-            
-            if (!slot.disponibile) {
-                if (savedStatus === 'bloccato') {
-                    slotText = `${slot.orario} - Bloccato`;
-                } else {
-                    slotText = `${slot.orario} - Occupato`;
-                }
-            }
-            
-            slotsHTML += `
-                <div class="${slotClass}" data-time="${slot.orario}" ${slot.disponibile ? 'onclick="selectTime(\'' + slot.orario + '\')"' : ''}>
-                    ${slotText}
-                </div>
-            `;
-        });
-        
+        console.error('Errore caricamento orari:', error);
+        // Mostra messaggio di errore
         if (timeSlots) {
-            timeSlots.innerHTML = slotsHTML;
+            timeSlots.innerHTML = '<p class="error">Errore nel caricamento degli orari. Riprova più tardi.</p>';
         }
-        showLoading(false);
+
     }
 }
 
@@ -361,13 +316,11 @@ async function handleBookingSubmit(e) {
                 }
             }
         } catch (apiError) {
-            console.log('API non disponibile, usando modalità locale');
+            console.error('Errore API:', apiError);
+            alert('Errore nella prenotazione. Riprova più tardi.');
+            showLoading(false);
+            return;
         }
-        
-        // Modalità locale - mostra direttamente la conferma
-        showBookingConfirmation(bookingData);
-        resetForm();
-        showLoading(false);
         
     } catch (error) {
         console.error('Errore prenotazione:', error);

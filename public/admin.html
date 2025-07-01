@@ -25,13 +25,7 @@
         </div>
     </header>
 
-    <!-- Test Mode Banner -->
-    <div id="testModeBanner" class="test-mode-banner" style="display: none;">
-        <div class="container">
-            <i class="fas fa-flask"></i>
-            <span>Modalità Test Locale - Dati di Esempio</span>
-        </div>
-    </div>
+
 
     <!-- Admin Section -->
     <section class="admin-section">
@@ -142,7 +136,6 @@
         // Logout
         function logout() {
             sessionStorage.removeItem('adminAuthenticated');
-            sessionStorage.removeItem('localTestMode');
             window.location.href = '/admin-login';
         }
 
@@ -167,18 +160,10 @@
                 document.getElementById('todayBookings').textContent = stats.oggi;
                 document.getElementById('weekBookings').textContent = stats.questaSettimana;
             } catch (error) {
-                console.log('API non disponibile, usando dati di esempio per test locale');
-                
-                // Dati di esempio per test locale
-                if (sessionStorage.getItem('localTestMode')) {
-                    document.getElementById('totalBookings').textContent = '15';
-                    document.getElementById('todayBookings').textContent = '3';
-                    document.getElementById('weekBookings').textContent = '8';
-                } else {
-                    document.getElementById('totalBookings').textContent = 'N/A';
-                    document.getElementById('todayBookings').textContent = 'N/A';
-                    document.getElementById('weekBookings').textContent = 'N/A';
-                }
+                console.error('Errore caricamento statistiche:', error);
+                document.getElementById('totalBookings').textContent = 'N/A';
+                document.getElementById('todayBookings').textContent = 'N/A';
+                document.getElementById('weekBookings').textContent = 'N/A';
             }
         }
 
@@ -200,43 +185,8 @@
                 const prenotazioni = JSON.parse(text);
                 displayBookings(prenotazioni);
             } catch (error) {
-                console.log('API non disponibile, usando prenotazioni di esempio per test locale');
-                
-                // Prenotazioni di esempio per test locale
-                if (sessionStorage.getItem('localTestMode')) {
-                    const prenotazioniEsempio = [
-                        {
-                            id: 1,
-                            nome: 'Marco Rossi',
-                            telefono: '+39 123 456 789',
-                            data: '2025-07-01',
-                            orario: '16:00',
-                            numero_giocatori: 6,
-                            note: 'Prima volta'
-                        },
-                        {
-                            id: 2,
-                            nome: 'Giulia Bianchi',
-                            telefono: '+39 987 654 321',
-                            data: '2025-07-01',
-                            orario: '18:00',
-                            numero_giocatori: 8,
-                            note: ''
-                        },
-                        {
-                            id: 3,
-                            nome: 'Luca Verdi',
-                            telefono: '+39 555 123 456',
-                            data: '2025-07-02',
-                            orario: '17:00',
-                            numero_giocatori: 4,
-                            note: 'Torneo amatoriale'
-                        }
-                    ];
-                    displayBookings(prenotazioniEsempio);
-                } else {
-                    document.getElementById('bookingsList').innerHTML = '<p class="no-bookings">Sistema admin non disponibile in modalità locale. Usa il sito live su Netlify.</p>';
-                }
+                console.error('Errore caricamento prenotazioni:', error);
+                document.getElementById('bookingsList').innerHTML = '<p class="no-bookings">Errore nel caricamento delle prenotazioni. Riprova più tardi.</p>';
             }
         }
 
@@ -355,28 +305,8 @@
                 const slots = JSON.parse(text);
                 displaySchedule(slots, date);
             } catch (error) {
-                console.log('API non disponibile, usando orari di esempio per test locale');
-                
-                // Orari di esempio per test locale
-                if (sessionStorage.getItem('localTestMode')) {
-                    const slots = [];
-                    const testSchedule = JSON.parse(sessionStorage.getItem('testSchedule') || '{}');
-                    const dateSchedule = testSchedule[date] || {};
-                    
-                    for (let hour = 16; hour <= 22; hour++) {
-                        const orario = `${hour.toString().padStart(2, '0')}:00`;
-                        const savedStatus = dateSchedule[orario] || 'libero';
-                        
-                        slots.push({
-                            orario: orario,
-                            disponibile: savedStatus === 'libero',
-                            tipo: savedStatus
-                        });
-                    }
-                    displaySchedule(slots, date);
-                } else {
-                    document.getElementById('scheduleList').innerHTML = '<p class="no-schedule">Sistema non disponibile in modalità locale</p>';
-                }
+                console.error('Errore caricamento orari:', error);
+                document.getElementById('scheduleList').innerHTML = '<p class="no-schedule">Errore nel caricamento degli orari. Riprova più tardi.</p>';
             }
         }
 
@@ -454,19 +384,8 @@
                     throw new Error('Errore aggiornamento');
                 }
             } catch (error) {
-                console.log('API non disponibile, simulando aggiornamento in modalità test');
-                
-                // In modalità test, simula l'aggiornamento
-                if (sessionStorage.getItem('localTestMode')) {
-                    // Salva lo status in sessionStorage per la modalità test
-                    const testSchedule = JSON.parse(sessionStorage.getItem('testSchedule') || '{}');
-                    if (!testSchedule[data]) testSchedule[data] = {};
-                    testSchedule[data][orario] = newStatus;
-                    sessionStorage.setItem('testSchedule', JSON.stringify(testSchedule));
-                    
-                    alert(`Orario ${orario} impostato come: ${newStatus === 'libero' ? 'Disponibile' : newStatus === 'occupato' ? 'Occupato' : 'Bloccato'}`);
-                    loadSchedule(); // Ricarica per mostrare il cambio
-                }
+                console.error('Errore aggiornamento orario:', error);
+                alert('Errore nell\'aggiornamento dell\'orario. Riprova più tardi.');
             }
         }
 
@@ -484,11 +403,6 @@
         // Inizializzazione
         document.addEventListener('DOMContentLoaded', function() {
             if (!checkAuth()) return;
-            
-            // Mostra banner se in modalità test
-            if (sessionStorage.getItem('localTestMode')) {
-                document.getElementById('testModeBanner').style.display = 'flex';
-            }
             
             loadStats();
             loadAllBookings();

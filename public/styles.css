@@ -387,6 +387,16 @@ body {
     padding: 2rem;
 }
 
+.error {
+    text-align: center;
+    color: var(--error-color);
+    font-weight: 500;
+    padding: 1rem;
+    background: #fff5f5;
+    border-radius: var(--border-radius);
+    border: 1px solid #fed7d7;
+}
+
 /* Booking Form */
 .booking-form {
     background: white;
@@ -1282,21 +1292,6 @@ body {
     padding-right: 40px;
 }
 
-/* Test Mode Banner */
-.test-mode-banner {
-    background: linear-gradient(135deg, #ff6b35, #f7931e);
-    color: white;
-    padding: 0.75rem 0;
-    text-align: center;
-    font-weight: 500;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-}
 
-.test-mode-banner i {
-    font-size: 1.1rem;
-}
 
  

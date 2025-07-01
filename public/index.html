@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🏐 Prenotazioni Beach Volley</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-volleyball-ball"></i>
+                    <h1>Preturo Beach Volley</h1>
+                </div>
+                <nav class="nav">
+                    <a href="#" class="nav-link active">Prenota</a>
+                    <a href="/admin" class="nav-link">Admin</a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <div class="hero-content">
+                <div class="hero-left">
+                    <h2>Prenota il tuo slot di Beach Volley</h2>
+                    <p>Divertiti con amici e famiglia nel nostro campetto professionale</p>
+                    <div class="hero-features">
+                        <div class="feature">
+                            <i class="fas fa-clock"></i>
+                            <span>16:00-23:00</span>
+                        </div>
+                        <div class="feature">
+                            <i class="fas fa-users"></i>
+                            <span>Fino a 12 giocatori</span>
+                        </div>
+                        <div class="feature">
+                            <i class="fas fa-euro-sign"></i>
+                            <span>€4 over 18 / €3 under 18</span>
+                        </div>
+                        <div class="feature">
+                            <i class="fab fa-instagram"></i>
+                            <a href="https://www.instagram.com/summer_beachvolley_preturo" target="_blank" class="feature-link">
+                                Seguici su Instagram
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="hero-right">
+                    <div class="mini-map">
+                        <h4><i class="fas fa-map-marker-alt"></i> Dove Siamo</h4>
+                        <a href="https://maps.google.com/?q=Via+Giovanni+Palatucci+2,+83025+Montoro+AV,+Italia" target="_blank" class="map-link">
+                            <div class="map-placeholder">
+                                <i class="fas fa-map"></i>
+                                <p>Apri in Maps</p>
+                            </div>
+                        </a>
+                        <p class="map-address">
+                            Via Giovanni Palatucci 2<br>
+                            83025 Montoro(AV) Fraz. Preturo
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Prenotazione Section -->
+    <section class="booking-section">
+        <div class="container">
+            <div class="booking-container">
+                <!-- Selezione Data -->
+                <div class="date-selector">
+                    <h3><i class="fas fa-calendar-alt"></i> Seleziona Data</h3>
+                    <div class="calendar">
+                        <div class="calendar-header">
+                            <button id="prevMonth" class="calendar-btn">
+                                <i class="fas fa-chevron-left"></i>
+                            </button>
+                            <h4 id="currentMonth">Gennaio 2024</h4>
+                            <button id="nextMonth" class="calendar-btn">
+                                <i class="fas fa-chevron-right"></i>
+                            </button>
+                        </div>
+                        <div class="calendar-grid">
+                            <div class="calendar-weekdays">
+                                <div>Dom</div>
+                                <div>Lun</div>
+                                <div>Mar</div>
+                                <div>Mer</div>
+                                <div>Gio</div>
+                                <div>Ven</div>
+                                <div>Sab</div>
+                            </div>
+                            <div id="calendarDays" class="calendar-days"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Selezione Orario -->
+                <div class="time-selector">
+                    <h3><i class="fas fa-clock"></i> Orari Disponibili</h3>
+                    <div id="timeSlots" class="time-slots">
+                        <p class="no-selection">Seleziona prima una data</p>
+                    </div>
+                </div>
+
+                <!-- Form Prenotazione -->
+                <div class="booking-form">
+                    <h3><i class="fas fa-edit"></i> Dettagli Prenotazione</h3>
+                    <form id="bookingForm">
+                        <div class="form-group">
+                            <label for="nome">Nome e Cognome *</label>
+                            <input type="text" id="nome" name="nome" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="telefono">Numero di Telefono *</label>
+                            <input type="tel" id="telefono" name="telefono" placeholder="+39 123 456 7890" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="numero_giocatori">Numero di Giocatori *</label>
+                            <select id="numero_giocatori" name="numero_giocatori" required>
+                                <option value="">Seleziona...</option>
+                                <option value="2">2 giocatori</option>
+                                <option value="4">4 giocatori</option>
+                                <option value="6">6 giocatori</option>
+                                <option value="8">8 giocatori</option>
+                                <option value="10">10 giocatori</option>
+                                <option value="12">12 giocatori</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="note">Note (opzionale)</label>
+                            <textarea id="note" name="note" rows="3" placeholder="Eventuali richieste speciali..."></textarea>
+                        </div>
+                        
+                        <div class="booking-summary">
+                            <h4>Riepilogo Prenotazione</h4>
+                            <div id="bookingSummary" class="summary-content">
+                                <p>Seleziona data e orario per vedere il riepilogo</p>
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary" disabled>
+                            <i class="fas fa-check"></i> Conferma Prenotazione
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Modal Conferma -->
+    <div id="confirmModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-check-circle"></i> Prenotazione Pronta!</h3>
+                <button class="modal-close" onclick="closeModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="success-message">
+                    <i class="fas fa-phone"></i>
+                    <p>Invia la tua prenotazione via WhatsApp!</p>
+                </div>
+                <div id="bookingDetails" class="booking-details"></div>
+                <div class="whatsapp-section">
+                    <p><strong>📱 Clicca il bottone per aprire WhatsApp con il messaggio già scritto</strong></p>
+                    <a id="whatsappButton" href="#" class="btn btn-whatsapp" target="_blank">
+                        <i class="fab fa-whatsapp"></i>
+                        Invia su WhatsApp
+                    </a>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal()">Chiudi</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Spinner -->
+    <div id="loadingSpinner" class="loading-spinner">
+        <div class="spinner"></div>
+        <p>Caricamento...</p>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-info">
+                    <h4>🏐 Summer Beach Volley Preturo</h4>
+                    <p>📍 Via Giovanni Palatucci 2 - 83025 Montoro(AV) Fraz. Preturo</p>
+                    <p>🕒 Aperto tutti i giorni dalle 16.00 alle 23.00</p>
+                </div>
+                <div class="footer-contact">
+                    <h5>Contatti</h5>
+                    <p><i class="fas fa-phone"></i> Marco: +39 342 700 4105</p>
+                    <p><i class="fas fa-phone"></i> Luigi: +39 339 175 9103</p>
+                    <p><i class="fab fa-instagram"></i> <a href="https://www.instagram.com/summer_beachvolley_preturo" target="_blank">@summer_beachvolley_preturo</a></p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html> 

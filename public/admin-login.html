@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔐 Admin Login - Summer Beach Volley Preturo</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-volleyball-ball"></i>
+                    <h1>Preturo Beach Volley
+                    </h1>
+                </div>
+                <nav class="nav">
+                    <a href="/" class="nav-link">Prenota</a>
+                    <a href="/admin" class="nav-link active">Admin</a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Login Section -->
+    <section class="login-section">
+        <div class="container">
+            <div class="login-container">
+                <div class="login-card">
+                    <div class="login-header">
+                        <i class="fas fa-lock"></i>
+                        <h2>Accesso Amministratore</h2>
+                        <p>Inserisci la password per accedere al pannello di gestione</p>
+                    </div>
+                    
+                    <form id="loginForm" class="login-form">
+                        <div class="form-group">
+                            <label for="password">Password</label>
+                            <input type="password" id="password" name="password" required>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-sign-in-alt"></i> Accedi
+                        </button>
+                    </form>
+                    
+                    <div class="login-footer">
+                        <a href="/" class="back-link">
+                            <i class="fas fa-arrow-left"></i> Torna alla prenotazione
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-info">
+                    <h4>🏐 Summer Beach Volley Preturo</h4>
+                    <p>📍 Via Giovanni Palatucci 2 - 83025 Montoro(AV) Fraz. Preturo</p>
+                    <p>🕒 Aperto tutti i giorni dalle 16.00 alle 23.00</p>
+                </div>
+                <div class="footer-contact">
+                    <h5>Contatti</h5>
+                    <p><i class="fas fa-phone"></i> Marco: +39 342 700 4105</p>
+                    <p><i class="fas fa-phone"></i> Luigi: +39 339 175 9103</p>
+                    <p><i class="fab fa-instagram"></i> <a href="https://www.instagram.com/summer_beachvolley_preturo" target="_blank">@summer_beachvolley_preturo</a></p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const password = document.getElementById('password').value;
+            const submitButton = this.querySelector('button[type="submit"]');
+            
+            // Disabilita il bottone durante la verifica
+            submitButton.disabled = true;
+            submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verificando...';
+            
+            try {
+                const response = await fetch('/api/admin/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ password })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    // Salva l'autenticazione in sessionStorage
+                    sessionStorage.setItem('adminAuthenticated', 'true');
+                    // Reindirizza alla dashboard admin
+                    window.location.href = '/admin';
+                } else {
+                    alert('Password non corretta!');
+                    document.getElementById('password').value = '';
+                }
+            } catch (error) {
+                alert('Errore durante la verifica. Riprova.');
+                console.error('Errore login:', error);
+            } finally {
+                // Riabilita il bottone
+                submitButton.disabled = false;
+                submitButton.innerHTML = '<i class="fas fa-sign-in-alt"></i> Accedi';
+            }
+        });
+    </script>
+</body>
+</html> 

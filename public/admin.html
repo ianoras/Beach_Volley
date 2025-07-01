@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🏐 Admin - Summer Beach Volley Preturo</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-volleyball-ball"></i>
+                    <h1>Summer Beach Volley Preturo</h1>
+                </div>
+                <nav class="nav">
+                    <a href="/" class="nav-link">Prenota</a>
+                    <a href="/admin" class="nav-link active">Admin</a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Admin Section -->
+    <section class="admin-section">
+        <div class="container">
+            <div class="admin-container">
+                <div class="admin-header">
+                    <h2><i class="fas fa-cog"></i> Dashboard Amministratore</h2>
+                    <p>Gestisci le prenotazioni del campetto</p>
+                    <button class="btn btn-secondary" onclick="logout()" style="margin-top: 1rem;">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </button>
+                </div>
+
+                <!-- Statistiche -->
+                <div class="stats-section">
+                    <h3><i class="fas fa-chart-bar"></i> Statistiche</h3>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-number" id="totalBookings">-</div>
+                            <div class="stat-label">Prenotazioni Totali</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="todayBookings">-</div>
+                            <div class="stat-label">Prenotazioni Oggi</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="weekBookings">-</div>
+                            <div class="stat-label">Questa Settimana</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Filtri -->
+                <div class="filters-section">
+                    <h3><i class="fas fa-filter"></i> Filtri</h3>
+                    <div class="filters">
+                        <div class="filter-group">
+                            <label for="dateFilter">Data:</label>
+                            <input type="date" id="dateFilter" onchange="filterBookings()">
+                        </div>
+                        <div class="filter-group">
+                            <button class="btn btn-secondary" onclick="loadAllBookings()">
+                                <i class="fas fa-refresh"></i> Tutte le Prenotazioni
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Lista Prenotazioni -->
+                <div class="bookings-section">
+                    <h3><i class="fas fa-list"></i> Prenotazioni</h3>
+                    <div id="bookingsList" class="bookings-list">
+                        <p class="loading">Caricamento prenotazioni...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-info">
+                    <h4>🏐 Summer Beach Volley Preturo</h4>
+                    <p>📍 Via Giovanni Palatucci 2 - 83025 Montoro(AV) Fraz. Preturo</p>
+                    <p>🕒 Aperto tutti i giorni dalle 16.00 alle 23.00</p>
+                </div>
+                <div class="footer-contact">
+                    <h5>Contatti</h5>
+                    <p><i class="fas fa-phone"></i> Marco: +39 342 700 4105</p>
+                    <p><i class="fas fa-phone"></i> Luigi: +39 339 175 9103</p>
+                    <p><i class="fab fa-instagram"></i> <a href="https://www.instagram.com/summer_beachvolley_preturo" target="_blank">@summer_beachvolley_preturo</a></p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Controllo autenticazione
+        function checkAuth() {
+            if (!sessionStorage.getItem('adminAuthenticated')) {
+                window.location.href = '/admin-login';
+                return false;
+            }
+            return true;
+        }
+
+        // Logout
+        function logout() {
+            sessionStorage.removeItem('adminAuthenticated');
+            window.location.href = '/admin-login';
+        }
+
+        // Carica statistiche
+        async function loadStats() {
+            if (!checkAuth()) return;
+            
+            try {
+                const response = await fetch('/api/stats');
+                const stats = await response.json();
+                
+                document.getElementById('totalBookings').textContent = stats.totali;
+                document.getElementById('todayBookings').textContent = stats.oggi;
+                document.getElementById('weekBookings').textContent = stats.questaSettimana;
+            } catch (error) {
+                console.error('Errore caricamento statistiche:', error);
+            }
+        }
+
+        // Carica tutte le prenotazioni
+        async function loadAllBookings() {
+            if (!checkAuth()) return;
+            
+            try {
+                const response = await fetch('/api/prenotazioni');
+                const prenotazioni = await response.json();
+                displayBookings(prenotazioni);
+            } catch (error) {
+                console.error('Errore caricamento prenotazioni:', error);
+            }
+        }
+
+        // Filtra prenotazioni per data
+        async function filterBookings() {
+            if (!checkAuth()) return;
+            
+            const date = document.getElementById('dateFilter').value;
+            if (!date) {
+                loadAllBookings();
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/prenotazioni?data=${date}`);
+                const prenotazioni = await response.json();
+                displayBookings(prenotazioni);
+            } catch (error) {
+                console.error('Errore filtro prenotazioni:', error);
+            }
+        }
+
+        // Mostra prenotazioni
+        function displayBookings(prenotazioni) {
+            const bookingsList = document.getElementById('bookingsList');
+            
+            if (prenotazioni.length === 0) {
+                bookingsList.innerHTML = '<p class="no-bookings">Nessuna prenotazione trovata</p>';
+                return;
+            }
+
+            let html = '';
+            prenotazioni.forEach(prenotazione => {
+                const data = new Date(prenotazione.data).toLocaleDateString('it-IT');
+                html += `
+                    <div class="booking-item">
+                        <div class="booking-info">
+                            <div class="booking-header">
+                                <h4>${prenotazione.nome}</h4>
+                                <span class="booking-date">${data} - ${prenotazione.orario}</span>
+                            </div>
+                            <div class="booking-details">
+                                <p><i class="fas fa-phone"></i> ${prenotazione.telefono}</p>
+                                <p><i class="fas fa-users"></i> ${prenotazione.numero_giocatori} giocatori</p>
+                                ${prenotazione.note ? `<p><i class="fas fa-sticky-note"></i> ${prenotazione.note}</p>` : ''}
+                            </div>
+                        </div>
+                        <div class="booking-actions">
+                            <button class="btn btn-danger" onclick="deleteBooking(${prenotazione.id})">
+                                <i class="fas fa-trash"></i> Cancella
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            bookingsList.innerHTML = html;
+        }
+
+        // Cancella prenotazione
+        async function deleteBooking(id) {
+            if (!checkAuth()) return;
+            
+            if (!confirm('Sei sicuro di voler cancellare questa prenotazione?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/prenotazioni/${id}`, {
+                    method: 'DELETE'
+                });
+                
+                if (response.ok) {
+                    loadAllBookings();
+                    loadStats();
+                } else {
+                    alert('Errore nella cancellazione');
+                }
+            } catch (error) {
+                console.error('Errore cancellazione:', error);
+                alert('Errore nella cancellazione');
+            }
+        }
+
+        // Inizializzazione
+        document.addEventListener('DOMContentLoaded', function() {
+            if (!checkAuth()) return;
+            
+            loadStats();
+            loadAllBookings();
+        });
+    </script>
+</body>
+</html> 

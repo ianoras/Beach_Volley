@@ -331,15 +331,12 @@ async function loadTimeSlots(dateString) {
             let slotClass = 'time-slot';
             let slotText = slot.orario;
             
-            if (slot.tipo === 'occupato') {
-                slotClass += ' occupied';
-                slotText += ' - Occupato';
-            } else if (slot.tipo === 'bloccato') {
+            if (slot.tipo === 'bloccato') {
                 slotClass += ' blocked';
                 slotText += ' - Bloccato';
             }
             
-            const isClickable = slot.disponibile && slot.tipo === 'libero';
+            const isClickable = slot.tipo === 'libero';
             
             slotsHTML += `
                 <div class="${slotClass}" data-time="${slot.orario}" data-tipo="${slot.tipo}" ${isClickable ? 'onclick="selectTime(\'' + slot.orario + '\')"' : ''}>

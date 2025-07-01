@@ -373,17 +373,13 @@
             let html = `<div class="schedule-date-header"><h4>Orari per ${formattedDate}</h4></div>`;
             
             slots.forEach(slot => {
-                const isAvailable = slot.disponibile && slot.tipo !== 'bloccato';
-                const isOccupied = slot.tipo === 'occupato' || !slot.disponibile;
+                const isAvailable = slot.tipo === 'libero';
                 const isBlocked = slot.tipo === 'bloccato';
                 
                 let statusClass = 'available';
                 let statusText = 'Disponibile';
                 
-                if (isOccupied) {
-                    statusClass = 'occupied';
-                    statusText = 'Occupato';
-                } else if (isBlocked) {
+                if (isBlocked) {
                     statusClass = 'blocked';
                     statusText = 'Bloccato';
                 }
@@ -409,14 +405,9 @@
             const options = [];
             
             if (currentTipo === 'libero') {
-                options.push({ label: 'Imposta come Occupato', value: 'occupato', icon: 'fas fa-user-times' });
-                options.push({ label: 'Imposta come Bloccato', value: 'bloccato', icon: 'fas fa-ban' });
-            } else if (currentTipo === 'occupato') {
-                options.push({ label: 'Libera Slot', value: 'libero', icon: 'fas fa-check' });
                 options.push({ label: 'Imposta come Bloccato', value: 'bloccato', icon: 'fas fa-ban' });
             } else if (currentTipo === 'bloccato') {
                 options.push({ label: 'Libera Slot', value: 'libero', icon: 'fas fa-check' });
-                options.push({ label: 'Imposta come Occupato', value: 'occupato', icon: 'fas fa-user-times' });
             }
             
             let optionsHTML = '';
@@ -474,6 +465,11 @@
             
             console.log(`Cambio status: ${orario} a ${newTipo}${motivo ? ` con nota: ${motivo}` : ''}`);
             
+            // Mostra loading
+            const scheduleList = document.getElementById('scheduleList');
+            const originalContent = scheduleList.innerHTML;
+            scheduleList.innerHTML = '<p class="loading">Aggiornamento in corso...</p>';
+            
             try {
                 const response = await fetch(`${getApiBaseUrl()}/disponibilita/update`, {
                     method: 'POST',
@@ -490,15 +486,38 @@
                 
                 if (response.ok) {
                     closeSlotOptions();
-                    loadSchedule(); // Ricarica gli orari
-                    loadStats(); // Ricarica statistiche
-                    loadBlockedSlots(); // Ricarica slot bloccati
+                    
+                    // Delay per assicurarsi che il database sia aggiornato
+                    setTimeout(async () => {
+                        // Mantieni la data selezionata e ricarica gli orari
+                        if (selectedDate) {
+                            const dateString = selectedDate.toISOString().split('T')[0];
+                            console.log('Ricarico orari per data selezionata:', dateString);
+                            await loadScheduleForDate(dateString);
+                        } else {
+                            // Se non c'è data selezionata, usa la data dello slot
+                            console.log('Ricarico orari per data slot:', data);
+                            await loadScheduleForDate(data);
+                            // Imposta la data selezionata
+                            const [year, month, day] = data.split('-').map(Number);
+                            selectedDate = new Date(year, month - 1, day);
+                        }
+                        
+                        // Aggiorna il calendario per mostrare la data selezionata
+                        updateAdminCalendar();
+                        
+                        loadStats(); // Ricarica statistiche
+                        loadBlockedSlots(); // Ricarica slot bloccati
+                    }, 500);
+                    
                 } else {
                     throw new Error('Errore aggiornamento');
                 }
             } catch (error) {
                 console.error('Errore aggiornamento orario:', error);
                 alert('Errore nell\'aggiornamento dell\'orario. Riprova più tardi.');
+                // Ripristina contenuto originale in caso di errore
+                scheduleList.innerHTML = originalContent;
             }
         }
 
@@ -633,7 +652,7 @@
                 const isCurrentMonth = currentDate.getMonth() === currentMonth;
                 const isToday = currentDate.toDateString() === today.toDateString();
                 const isSelected = selectedDate && currentDate.toDateString() === selectedDate.toDateString();
-                const isDisabled = currentDate < today;
+                const isDisabled = currentDate < today && currentDate.toDateString() !== today.toDateString();
                 
                 let dayClass = 'admin-calendar-day';
                 if (!isCurrentMonth) dayClass += ' disabled';
@@ -688,6 +707,13 @@
             if (!checkAuth()) return;
             
             try {
+                // Aggiorna la data selezionata se non è già impostata
+                if (!selectedDate || selectedDate.toISOString().split('T')[0] !== dateString) {
+                    const [year, month, day] = dateString.split('-').map(Number);
+                    selectedDate = new Date(year, month - 1, day);
+                    // NON aggiorniamo il calendario qui per evitare problemi
+                }
+                
                 const response = await fetch(`${getApiBaseUrl()}/disponibilita/${dateString}`);
                 if (!response.ok) {
                     throw new Error('API non disponibile');
@@ -700,6 +726,10 @@
                 
                 const slots = JSON.parse(text);
                 displaySchedule(slots, dateString);
+                
+                // Log per debug
+                console.log(`Orari caricati per ${dateString}:`, slots);
+                
             } catch (error) {
                 console.error('Errore caricamento orari:', error);
                 document.getElementById('scheduleList').innerHTML = '<p class="no-schedule">Errore nel caricamento degli orari. Riprova più tardi.</p>';

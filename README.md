@@ -29,7 +29,7 @@ npm start
 ## 🔐 Accesso Admin
 
 - **URL:** `http://localhost:3000/admin`
-- **Password:** `beachvolley2024`
+- **Password:** `Preturo2024!`
 
 ## 📋 Struttura Progetto
 
@@ -75,7 +75,7 @@ beach_volley/
 ### Cambiare Password Admin
 Modifica il file `public/admin-login.html` alla riga 85:
 ```javascript
-if (password === 'beachvolley2024') {
+if (password === 'Preturo2024!') {
 ```
 
 ### Cambiare Numero WhatsApp

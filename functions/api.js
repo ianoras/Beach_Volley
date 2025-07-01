@@ -149,7 +149,7 @@ app.get('/disponibilita/:data', async (req, res) => {
             if (bloccato) {
                 tipo = 'bloccato';
             } else if (occupato) {
-                tipo = 'occupato';
+                tipo = 'bloccato';
             }
             
             orari.push({

@@ -304,7 +304,7 @@ app.use((error, req, res, next) => {
 
 // Avvia server
 initApp().then(() => {
-    app.listen(PORT, () => {
+    app.listen(PORT, '0.0.0.0', () => {
         console.log(`🚀 Server avviato su http://localhost:${PORT}`);
         console.log(`📱 Sistema di prenotazioni Beach Volley attivo!`);
     });

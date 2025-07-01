@@ -4,6 +4,11 @@ let selectedDate = null;
 let selectedTime = null;
 let config = {};
 
+// Configurazione API
+const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
+    ? 'http://localhost:3000/api' 
+    : 'https://beach-volley-backend-production.up.railway.app/api'; // URL del backend su Railway
+
 // Funzione per ottenere l'URL base delle API
 function getApiBaseUrl() {
     // Se siamo su Netlify (produzione), usa le funzioni serverless

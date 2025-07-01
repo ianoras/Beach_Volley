@@ -304,75 +304,224 @@ const handler = async (event, context) => {
         
         // Estrai path e query parameters
         const path = event.path.replace('/.netlify/functions/api', '');
-        
-        // Crea mock request
-        const mockReq = {
-            method: event.httpMethod,
-            url: path,
-            path: path,
-            query: event.queryStringParameters || {},
-            body: event.body ? JSON.parse(event.body) : {},
-            headers: event.headers || {}
-        };
-        
-        // Crea mock response
-        let responseBody = '';
-        let responseStatus = 200;
-        let responseHeaders = {};
-        
-        const mockRes = {
-            status: (code) => {
-                responseStatus = code;
-                return mockRes;
-            },
-            json: (data) => {
-                responseBody = JSON.stringify(data);
-                responseHeaders['Content-Type'] = 'application/json';
-            },
-            send: (data) => {
-                responseBody = data;
-            }
-        };
-        
-        // Gestisci le route manualmente
         const method = event.httpMethod.toLowerCase();
         
+        // Gestisci le route direttamente
         if (method === 'get' && path === '/config') {
-            await app._router.stack.find(layer => layer.route && layer.route.path === '/config').route.stack[0].handle(mockReq, mockRes);
-        } else if (method === 'get' && path.startsWith('/disponibilita/')) {
-            const data = path.split('/')[2];
-            mockReq.params = { data };
-            await app._router.stack.find(layer => layer.route && layer.route.path === '/disponibilita/:data').route.stack[0].handle(mockReq, mockRes);
-        } else if (method === 'get' && path === '/prenotazioni') {
-            await app._router.stack.find(layer => layer.route && layer.route.path === '/prenotazioni').route.stack[0].handle(mockReq, mockRes);
-        } else if (method === 'post' && path === '/prenotazioni') {
-            await app._router.stack.find(layer => layer.route && layer.route.path === '/prenotazioni').route.stack[0].handle(mockReq, mockRes);
-        } else if (method === 'delete' && path.startsWith('/prenotazioni/')) {
-            const id = path.split('/')[2];
-            mockReq.params = { id };
-            await app._router.stack.find(layer => layer.route && layer.route.path === '/prenotazioni/:id').route.stack[0].handle(mockReq, mockRes);
-        } else if (method === 'get' && path === '/blocked-slots') {
-            await app._router.stack.find(layer => layer.route && layer.route.path === '/blocked-slots').route.stack[0].handle(mockReq, mockRes);
-        } else if (method === 'post' && path === '/disponibilita/update') {
-            await app._router.stack.find(layer => layer.route && layer.route.path === '/disponibilita/update').route.stack[0].handle(mockReq, mockRes);
-        } else if (method === 'put' && path.startsWith('/config/')) {
-            const chiave = path.split('/')[2];
-            mockReq.params = { chiave };
-            await app._router.stack.find(layer => layer.route && layer.route.path === '/config/:chiave').route.stack[0].handle(mockReq, mockRes);
-        } else if (method === 'post' && path === '/admin/login') {
-            await app._router.stack.find(layer => layer.route && layer.route.path === '/admin/login').route.stack[0].handle(mockReq, mockRes);
-        } else if (method === 'get' && path === '/stats') {
-            await app._router.stack.find(layer => layer.route && layer.route.path === '/stats').route.stack[0].handle(mockReq, mockRes);
-        } else {
-            responseStatus = 404;
-            responseBody = JSON.stringify({ error: 'Endpoint non trovato' });
+            try {
+                const orariApertura = await db.getConfigurazione('orari_apertura');
+                const durataSlot = await db.getConfigurazione('durata_slot');
+                const maxGiocatori = await db.getConfigurazione('max_giocatori');
+                const prezzoUnder18 = await db.getConfigurazione('prezzo_under18');
+                const prezzoOver18 = await db.getConfigurazione('prezzo_over18');
+                const indirizzo = await db.getConfigurazione('indirizzo');
+                const contattoMarco = await db.getConfigurazione('contatto_marco');
+                const contattoLuigi = await db.getConfigurazione('contatto_luigi');
+                const instagram = await db.getConfigurazione('instagram');
+                
+                return {
+                    statusCode: 200,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        orariApertura,
+                        durataSlot: parseInt(durataSlot),
+                        maxGiocatori: parseInt(maxGiocatori),
+                        prezzoUnder18: parseInt(prezzoUnder18),
+                        prezzoOver18: parseInt(prezzoOver18),
+                        indirizzo,
+                        contattoMarco,
+                        contattoLuigi,
+                        instagram
+                    })
+                };
+            } catch (error) {
+                return {
+                    statusCode: 500,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ error: error.message })
+                };
+            }
+        } 
+        else if (method === 'get' && path.startsWith('/disponibilita/')) {
+            try {
+                const data = path.split('/')[2];
+                const prenotazioni = await db.getPrenotazioni(data);
+                const orariBloccati = await db.getOrariBloccati(data);
+                
+                // Genera orari disponibili (16:00-23:00, slot di 1 ora)
+                const orari = [];
+                for (let ora = 16; ora < 23; ora++) {
+                    const orario = `${ora.toString().padStart(2, '0')}:00`;
+                    const occupato = prenotazioni.some(p => p.orario === orario);
+                    const bloccato = orariBloccati.some(b => b.orario === orario);
+                    
+                    let tipo = 'libero';
+                    if (bloccato) {
+                        tipo = 'bloccato';
+                    } else if (occupato) {
+                        tipo = 'occupato';
+                    }
+                    
+                    orari.push({
+                        orario,
+                        disponibile: !occupato && !bloccato,
+                        tipo,
+                        prenotazione: occupato ? prenotazioni.find(p => p.orario === orario) : null
+                    });
+                }
+                
+                return {
+                    statusCode: 200,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(orari)
+                };
+            } catch (error) {
+                return {
+                    statusCode: 500,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ error: error.message })
+                };
+            }
         }
-        
-        return {
-            statusCode: responseStatus,
-            headers: responseHeaders,
-            body: responseBody
-        };
+        else if (method === 'get' && path === '/prenotazioni') {
+            try {
+                const { data } = event.queryStringParameters || {};
+                const prenotazioni = await db.getPrenotazioni(data);
+                return {
+                    statusCode: 200,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(prenotazioni)
+                };
+            } catch (error) {
+                return {
+                    statusCode: 500,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ error: error.message })
+                };
+            }
+        }
+        else if (method === 'post' && path === '/prenotazioni') {
+            try {
+                const { nome, telefono, data, orario, numero_giocatori, note } = JSON.parse(event.body);
+                
+                // Validazione
+                if (!nome || !telefono || !data || !orario || !numero_giocatori) {
+                    return {
+                        statusCode: 400,
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ error: 'Tutti i campi sono obbligatori' })
+                    };
+                }
+                
+                // Verifica disponibilità
+                const disponibile = await db.verificaDisponibilita(data, orario);
+                if (!disponibile) {
+                    return {
+                        statusCode: 409,
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ error: 'Slot non disponibile' })
+                    };
+                }
+                
+                // Crea prenotazione
+                const prenotazione = { nome, telefono, data, orario, numero_giocatori, note };
+                const id = await db.creaPrenotazione(prenotazione);
+                
+                // Blocca automaticamente lo slot come "occupato"
+                await db.updateOrarioStatus(data, orario, 'occupato');
+                
+                return {
+                    statusCode: 200,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        success: true, 
+                        id, 
+                        message: 'Prenotazione creata con successo' 
+                    })
+                };
+            } catch (error) {
+                return {
+                    statusCode: 500,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ error: error.message })
+                };
+            }
+        }
+        else if (method === 'post' && path === '/admin/login') {
+            try {
+                const { password } = JSON.parse(event.body);
+                const adminPassword = process.env.ADMIN_PASSWORD || 'beachvolley2024';
+                
+                if (password === adminPassword) {
+                    return {
+                        statusCode: 200,
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ 
+                            success: true, 
+                            message: 'Accesso autorizzato' 
+                        })
+                    };
+                } else {
+                    return {
+                        statusCode: 401,
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ 
+                            success: false, 
+                            message: 'Password non corretta' 
+                        })
+                    };
+                }
+            } catch (error) {
+                return {
+                    statusCode: 500,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ error: error.message })
+                };
+            }
+        }
+        else if (method === 'get' && path === '/stats') {
+            try {
+                const prenotazioni = await db.getPrenotazioni();
+                
+                const oggi = new Date().toISOString().split('T')[0];
+                const prenotazioniOggi = prenotazioni.filter(p => p.data === oggi);
+                
+                // Conta slot bloccati totali
+                const orariBloccati = await db.getOrariBloccati();
+                const slotBloccati = orariBloccati.length;
+                
+                const stats = {
+                    totali: prenotazioni.length,
+                    oggi: prenotazioniOggi.length,
+                    questaSettimana: prenotazioni.filter(p => {
+                        const data = new Date(p.data);
+                        const oggi = new Date();
+                        const unaSettimanaFa = new Date(oggi.getTime() - 7 * 24 * 60 * 60 * 1000);
+                        return data >= unaSettimanaFa && data <= oggi;
+                    }).length,
+                    slotBloccati: slotBloccati
+                };
+                
+                return {
+                    statusCode: 200,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(stats)
+                };
+            } catch (error) {
+                return {
+                    statusCode: 500,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ error: error.message })
+                };
+            }
+        }
+        else {
+            return {
+                statusCode: 404,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ error: 'Endpoint non trovato' })
+            };
+        }
         
     } catch (error) {
         console.error('Errore handler:', error);

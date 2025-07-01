@@ -296,80 +296,92 @@ app.use((error, req, res, next) => {
 let isInitialized = false;
 
 const handler = async (event, context) => {
-    if (!isInitialized) {
-        await initApp();
-        isInitialized = true;
-    }
-    
-    // Estrai path e query parameters
-    const path = event.path.replace('/.netlify/functions/api', '');
-    const queryString = event.queryStringParameters ? 
-        '?' + Object.entries(event.queryStringParameters)
-            .map(([key, value]) => `${key}=${encodeURIComponent(value)}`)
-            .join('&') : '';
-    
-    // Crea mock request
-    const mockReq = {
-        method: event.httpMethod,
-        url: path + queryString,
-        path: path,
-        query: event.queryStringParameters || {},
-        body: event.body ? JSON.parse(event.body) : {},
-        headers: event.headers || {}
-    };
-    
-    // Crea mock response
-    let responseBody = '';
-    let responseStatus = 200;
-    let responseHeaders = {};
-    
-    const mockRes = {
-        status: (code) => {
-            responseStatus = code;
-            return mockRes;
-        },
-        json: (data) => {
-            responseBody = JSON.stringify(data);
-            responseHeaders['Content-Type'] = 'application/json';
-        },
-        send: (data) => {
-            responseBody = data;
-        }
-    };
-    
-    // Simula la richiesta
     try {
-        const http = require('http');
-        const url = require('url');
+        if (!isInitialized) {
+            await initApp();
+            isInitialized = true;
+        }
         
-        // Trova la route corrispondente
-        const route = app._router.stack.find(layer => {
-            if (layer.route) {
-                const routePath = layer.route.path;
-                const routeMethod = Object.keys(layer.route.methods)[0];
-                return routeMethod === event.httpMethod.toLowerCase() && 
-                       (routePath === path || routePath === path.replace(/\/$/, ''));
+        // Estrai path e query parameters
+        const path = event.path.replace('/.netlify/functions/api', '');
+        
+        // Crea mock request
+        const mockReq = {
+            method: event.httpMethod,
+            url: path,
+            path: path,
+            query: event.queryStringParameters || {},
+            body: event.body ? JSON.parse(event.body) : {},
+            headers: event.headers || {}
+        };
+        
+        // Crea mock response
+        let responseBody = '';
+        let responseStatus = 200;
+        let responseHeaders = {};
+        
+        const mockRes = {
+            status: (code) => {
+                responseStatus = code;
+                return mockRes;
+            },
+            json: (data) => {
+                responseBody = JSON.stringify(data);
+                responseHeaders['Content-Type'] = 'application/json';
+            },
+            send: (data) => {
+                responseBody = data;
             }
-            return false;
-        });
+        };
         
-        if (route) {
-            await route.route.stack[0].handle(mockReq, mockRes);
+        // Gestisci le route manualmente
+        const method = event.httpMethod.toLowerCase();
+        
+        if (method === 'get' && path === '/config') {
+            await app._router.stack.find(layer => layer.route && layer.route.path === '/config').route.stack[0].handle(mockReq, mockRes);
+        } else if (method === 'get' && path.startsWith('/disponibilita/')) {
+            const data = path.split('/')[2];
+            mockReq.params = { data };
+            await app._router.stack.find(layer => layer.route && layer.route.path === '/disponibilita/:data').route.stack[0].handle(mockReq, mockRes);
+        } else if (method === 'get' && path === '/prenotazioni') {
+            await app._router.stack.find(layer => layer.route && layer.route.path === '/prenotazioni').route.stack[0].handle(mockReq, mockRes);
+        } else if (method === 'post' && path === '/prenotazioni') {
+            await app._router.stack.find(layer => layer.route && layer.route.path === '/prenotazioni').route.stack[0].handle(mockReq, mockRes);
+        } else if (method === 'delete' && path.startsWith('/prenotazioni/')) {
+            const id = path.split('/')[2];
+            mockReq.params = { id };
+            await app._router.stack.find(layer => layer.route && layer.route.path === '/prenotazioni/:id').route.stack[0].handle(mockReq, mockRes);
+        } else if (method === 'get' && path === '/blocked-slots') {
+            await app._router.stack.find(layer => layer.route && layer.route.path === '/blocked-slots').route.stack[0].handle(mockReq, mockRes);
+        } else if (method === 'post' && path === '/disponibilita/update') {
+            await app._router.stack.find(layer => layer.route && layer.route.path === '/disponibilita/update').route.stack[0].handle(mockReq, mockRes);
+        } else if (method === 'put' && path.startsWith('/config/')) {
+            const chiave = path.split('/')[2];
+            mockReq.params = { chiave };
+            await app._router.stack.find(layer => layer.route && layer.route.path === '/config/:chiave').route.stack[0].handle(mockReq, mockRes);
+        } else if (method === 'post' && path === '/admin/login') {
+            await app._router.stack.find(layer => layer.route && layer.route.path === '/admin/login').route.stack[0].handle(mockReq, mockRes);
+        } else if (method === 'get' && path === '/stats') {
+            await app._router.stack.find(layer => layer.route && layer.route.path === '/stats').route.stack[0].handle(mockReq, mockRes);
         } else {
             responseStatus = 404;
             responseBody = JSON.stringify({ error: 'Endpoint non trovato' });
         }
+        
+        return {
+            statusCode: responseStatus,
+            headers: responseHeaders,
+            body: responseBody
+        };
+        
     } catch (error) {
         console.error('Errore handler:', error);
-        responseStatus = 500;
-        responseBody = JSON.stringify({ error: 'Errore interno del server' });
+        return {
+            statusCode: 500,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ error: 'Errore interno del server' })
+        };
     }
-    
-    return {
-        statusCode: responseStatus,
-        headers: responseHeaders,
-        body: responseBody
-    };
 };
 
 module.exports = { handler }; 

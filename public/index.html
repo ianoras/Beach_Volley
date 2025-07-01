@@ -32,7 +32,7 @@
             <div class="hero-content">
                 <div class="hero-left">
                     <h2>Prenota il tuo slot di Beach Volley</h2>
-                    <p>Divertiti con amici e famiglia nel nostro campetto professionale</p>
+                    <p>Divertiti nel nostro campetto professionale</p>
                     
                     <div class="hero-features">
                         <div class="feature">
@@ -45,7 +45,7 @@
                         </div>
                         <div class="feature">
                             <i class="fas fa-euro-sign"></i>
-                            <span>€4 over 18 / €3 under 18</span>
+                            <span>€ 4 over 18 / € 3 under 18</span>
                         </div>
                         <div class="feature">
                             <i class="fab fa-instagram"></i>
@@ -53,22 +53,12 @@
                                 Seguici su Instagram
                             </a>
                         </div>
-                    </div>
-                </div>
-                
-                <div class="hero-right">
-                    <div class="mini-map">
-                        <h4><i class="fas fa-map-marker-alt"></i> Dove Siamo</h4>
-                        <a href="https://maps.google.com/?q=Via+Giovanni+Palatucci+2,+83025+Montoro+AV,+Italia" target="_blank" class="map-link">
-                            <div class="map-placeholder">
-                                <i class="fas fa-map"></i>
-                                <p>Apri in Maps</p>
-                            </div>
-                        </a>
-                        <p class="map-address">
-                            Via Giovanni Palatucci 2<br>
-                            83025 Montoro(AV) Fraz. Preturo
-                        </p>
+                        <div class="feature">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <a href="https://maps.google.com/?q=Via+Giovanni+Palatucci+2,+83025+Montoro+AV,+Italia" target="_blank" class="feature-link">
+                                Via Giovanni Palatucci 2, Montoro(AV)
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -80,7 +70,7 @@
         <div class="container">
             <div class="booking-container">
                 <!-- Selezione Data -->
-                <div class="date-selector">
+                <div id="date-selector" class="date-selector">
                     <h3><i class="fas fa-calendar-alt"></i> Seleziona Data</h3>
                     <div class="calendar">
                         <div class="calendar-header">
@@ -108,7 +98,7 @@
                 </div>
 
                 <!-- Selezione Orario -->
-                <div class="time-selector">
+                <div id="time-selector" class="time-selector">
                     <h3><i class="fas fa-clock"></i> Orari Disponibili</h3>
                     <div id="timeSlots" class="time-slots">
                         <p class="no-selection">Seleziona prima una data</p>
@@ -116,7 +106,7 @@
                 </div>
 
                 <!-- Form Prenotazione -->
-                <div class="booking-form">
+                <div id="booking-form" class="booking-form">
                     <h3><i class="fas fa-edit"></i> Dettagli Prenotazione</h3>
                     <form id="bookingForm">
                         <div class="form-group">

@@ -9,119 +9,152 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
-    <!-- Header -->
-    <header class="header">
-        <div class="container">
-            <div class="header-content">
-                <div class="logo">
+    <!-- Admin Header Mobile-First -->
+    <header class="admin-header-mobile">
+        <div class="admin-header-content">
+            <div class="admin-header-left">
+                <div class="admin-logo">
                     <i class="fas fa-volleyball-ball"></i>
-                    <h1>Summer Beach Volley Preturo</h1>
+                    <h1>Admin Dashboard</h1>
                 </div>
-                <nav class="nav">
-                    <a href="/" class="nav-link">Prenota</a>
-                    <a href="/admin" class="nav-link active">Admin</a>
-                </nav>
+            </div>
+            <div class="admin-header-right">
+                <button class="btn btn-secondary admin-btn" onclick="window.location.href='/'">
+                    <i class="fas fa-home"></i>
+                    <span class="btn-text">Prenota</span>
+                </button>
+                <button class="btn btn-danger admin-btn" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span class="btn-text">Esci</span>
+                </button>
             </div>
         </div>
     </header>
 
-
+    <!-- Mobile Navigation Dropdown -->
+    <div class="mobile-nav-dropdown">
+        <button class="mobile-nav-toggle" onclick="toggleMobileNav()">
+            <i class="fas fa-bars"></i>
+            <span>Menu Admin</span>
+        </button>
+        <div class="mobile-nav-menu" id="mobileNavMenu">
+            <div class="mobile-nav-item" onclick="scrollToSection('bookings')">
+                <i class="fas fa-list"></i>
+                <span>Prenotazioni</span>
+            </div>
+            <div class="mobile-nav-item" onclick="scrollToSection('schedule')">
+                <i class="fas fa-clock"></i>
+                <span>Gestione Orari</span>
+            </div>
+            <div class="mobile-nav-item" onclick="scrollToSection('blocked')">
+                <i class="fas fa-ban"></i>
+                <span>Slot Bloccati</span>
+            </div>
+        </div>
+    </div>
 
     <!-- Admin Section -->
-    <section class="admin-section">
-        <div class="container">
-            <div class="admin-container">
-                <div class="admin-header">
-                    <h2><i class="fas fa-cog"></i> Dashboard Amministratore</h2>
-                    <p>Gestisci le prenotazioni del campetto</p>
-                    <button class="btn btn-secondary" onclick="logout()" style="margin-top: 1rem;">
-                        <i class="fas fa-sign-out-alt"></i> Logout
+    <section class="admin-section-mobile">
+        <div class="admin-container-mobile">
+            
+            <!-- Statistiche Section -->
+            <div class="admin-section-content" id="statsSection">
+                <div class="section-header">
+                    <h2><i class="fas fa-chart-bar"></i> Statistiche</h2>
+                </div>
+                <div class="stats-grid-mobile">
+                    <div class="stat-card-mobile clickable-stat" onclick="scrollToSection('bookings')">
+                        <div class="stat-number" id="totalBookings">-</div>
+                        <div class="stat-label">Prenotazioni Totali</div>
+                    </div>
+                    <div class="stat-card-mobile clickable-stat" onclick="scrollToSection('bookings')">
+                        <div class="stat-number" id="todayBookings">-</div>
+                        <div class="stat-label">Prenotazioni Oggi</div>
+                    </div>
+                    <div class="stat-card-mobile clickable-stat" onclick="scrollToSection('bookings')">
+                        <div class="stat-number" id="weekBookings">-</div>
+                        <div class="stat-label">Questa Settimana</div>
+                    </div>
+                    <div class="stat-card-mobile clickable-stat" onclick="scrollToSection('blocked')">
+                        <div class="stat-number" id="blockedSlots">-</div>
+                        <div class="stat-label">Slot Bloccati</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Prenotazioni Section -->
+            <div class="admin-section-content" id="bookingsSection">
+                <div class="section-header">
+                    <h2><i class="fas fa-list"></i> Prenotazioni</h2>
+                </div>
+                <div class="filters-mobile">
+                    <div class="filter-group-mobile">
+                        <label for="dateFilter">Filtra per data:</label>
+                        <input type="date" id="dateFilter" onchange="filterBookings()">
+                    </div>
+                    <button class="btn btn-refresh mobile-btn" onclick="loadAllBookings()">
+                        <i class="fas fa-refresh"></i> Tutte le Prenotazioni
                     </button>
                 </div>
-
-                <!-- Statistiche -->
-                <div class="stats-section">
-                    <h3><i class="fas fa-chart-bar"></i> Statistiche</h3>
-                    <div class="stats-grid">
-                        <div class="stat-card">
-                            <div class="stat-number" id="totalBookings">-</div>
-                            <div class="stat-label">Prenotazioni Totali</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-number" id="todayBookings">-</div>
-                            <div class="stat-label">Prenotazioni Oggi</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-number" id="weekBookings">-</div>
-                            <div class="stat-label">Questa Settimana</div>
-                        </div>
-                    </div>
+                <div id="bookingsList" class="bookings-list-mobile">
+                    <p class="loading">Caricamento prenotazioni...</p>
                 </div>
+            </div>
 
-                <!-- Filtri -->
-                <div class="filters-section">
-                    <h3><i class="fas fa-filter"></i> Filtri</h3>
-                    <div class="filters">
-                        <div class="filter-group">
-                            <label for="dateFilter">Data:</label>
-                            <input type="date" id="dateFilter" onchange="filterBookings()">
-                        </div>
-                        <div class="filter-group">
-                            <button class="btn btn-secondary" onclick="loadAllBookings()">
-                                <i class="fas fa-refresh"></i> Tutte le Prenotazioni
-                            </button>
-                        </div>
-                    </div>
+            <!-- Gestione Orari Section -->
+            <div class="admin-section-content" id="scheduleSection">
+                <div class="section-header">
+                    <h2><i class="fas fa-clock"></i> Gestione Orari</h2>
                 </div>
+                <div class="schedule-controls-mobile">
+                    <div class="admin-calendar-container">
+                        <div class="admin-calendar">
+                            <div class="admin-calendar-header">
+                                <button class="admin-calendar-btn" onclick="previousMonth()">
+                                    <i class="fas fa-chevron-left"></i>
+                                </button>
+                                <h4 id="adminCalendarMonth">Luglio 2025</h4>
+                                <button class="admin-calendar-btn" onclick="nextMonth()">
+                                    <i class="fas fa-chevron-right"></i>
+                                </button>
+                            </div>
+                            <div class="admin-calendar-weekdays">
+                                <div>Dom</div>
+                                <div>Lun</div>
+                                <div>Mar</div>
+                                <div>Mer</div>
+                                <div>Gio</div>
+                                <div>Ven</div>
+                                <div>Sab</div>
+                            </div>
+                            <div class="admin-calendar-days" id="adminCalendarDays">
+                                <!-- Calendar days will be generated here -->
+                            </div>
+                        </div>
+                    </div>
 
-                <!-- Gestione Orari -->
-                <div class="schedule-section">
-                    <h3><i class="fas fa-clock"></i> Gestione Orari</h3>
-                    <div class="schedule-controls">
-                        <div class="filter-group">
-                            <label for="scheduleDate">Data:</label>
-                            <input type="date" id="scheduleDate" onchange="loadSchedule()">
-                        </div>
-                        <div class="filter-group">
-                            <button class="btn btn-primary" onclick="loadSchedule()">
-                                <i class="fas fa-eye"></i> Visualizza Orari
-                            </button>
-                        </div>
-                    </div>
-                    <div id="scheduleList" class="schedule-list">
-                        <p class="no-schedule">Seleziona una data per gestire gli orari</p>
-                    </div>
                 </div>
+                <div id="scheduleList" class="schedule-list-mobile">
+                    <p class="no-schedule">Seleziona una data dal calendario per gestire gli orari</p>
+                </div>
+            </div>
 
-                <!-- Lista Prenotazioni -->
-                <div class="bookings-section">
-                    <h3><i class="fas fa-list"></i> Prenotazioni</h3>
-                    <div id="bookingsList" class="bookings-list">
-                        <p class="loading">Caricamento prenotazioni...</p>
-                    </div>
+            <!-- Slot Bloccati Section -->
+            <div class="admin-section-content" id="blockedSection">
+                <div class="section-header">
+                    <h2><i class="fas fa-ban"></i> Slot Bloccati</h2>
+                </div>
+                <div class="blocked-controls-mobile">
+                    <button class="btn btn-refresh mobile-btn" onclick="loadBlockedSlots()">
+                        <i class="fas fa-refresh"></i> Ricarica Slot Bloccati
+                    </button>
+                </div>
+                <div id="blockedSlotsList" class="blocked-slots-list-mobile">
+                    <p class="loading">Caricamento slot bloccati...</p>
                 </div>
             </div>
         </div>
     </section>
-
-    <!-- Footer -->
-    <footer class="footer">
-        <div class="container">
-            <div class="footer-content">
-                <div class="footer-info">
-                    <h4>🏐 Summer Beach Volley Preturo</h4>
-                    <p>📍 Via Giovanni Palatucci 2 - 83025 Montoro(AV) Fraz. Preturo</p>
-                    <p>🕒 Aperto tutti i giorni dalle 16.00 alle 23.00</p>
-                </div>
-                <div class="footer-contact">
-                    <h5>Contatti</h5>
-                    <p><i class="fas fa-phone"></i> Marco: +39 342 700 4105</p>
-                    <p><i class="fas fa-phone"></i> Luigi: +39 339 175 9103</p>
-                    <p><i class="fab fa-instagram"></i> <a href="https://www.instagram.com/summer_beachvolley_preturo" target="_blank">@summer_beachvolley_preturo</a></p>
-                </div>
-            </div>
-        </div>
-    </footer>
 
     <script>
         // Controllo autenticazione
@@ -137,6 +170,27 @@
         function logout() {
             sessionStorage.removeItem('adminAuthenticated');
             window.location.href = '/admin-login';
+        }
+
+        // Toggle mobile navigation
+        function toggleMobileNav() {
+            const menu = document.getElementById('mobileNavMenu');
+            menu.classList.toggle('show');
+        }
+
+        // Scroll to specific section
+        function scrollToSection(sectionName) {
+            const section = document.getElementById(sectionName + 'Section');
+            if (section) {
+                section.scrollIntoView({ 
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }
+
+            // Close mobile menu
+            const menu = document.getElementById('mobileNavMenu');
+            menu.classList.remove('show');
         }
 
         // Carica statistiche
@@ -159,6 +213,7 @@
                 document.getElementById('totalBookings').textContent = stats.totali;
                 document.getElementById('todayBookings').textContent = stats.oggi;
                 document.getElementById('weekBookings').textContent = stats.questaSettimana;
+                document.getElementById('blockedSlots').textContent = stats.slotBloccati || 0;
             } catch (error) {
                 console.error('Errore caricamento statistiche:', error);
                 document.getElementById('totalBookings').textContent = 'N/A';
@@ -230,22 +285,25 @@
 
             let html = '';
             prenotazioni.forEach(prenotazione => {
-                const data = new Date(prenotazione.data).toLocaleDateString('it-IT');
+                // Crea data locale per evitare problemi di fuso orario
+                const [year, month, day] = prenotazione.data.split('-').map(Number);
+                const bookingDate = new Date(year, month - 1, day);
+                const data = bookingDate.toLocaleDateString('it-IT');
                 html += `
-                    <div class="booking-item">
-                        <div class="booking-info">
-                            <div class="booking-header">
+                    <div class="booking-item-mobile">
+                        <div class="booking-info-mobile">
+                            <div class="booking-header-mobile">
                                 <h4>${prenotazione.nome}</h4>
-                                <span class="booking-date">${data} - ${prenotazione.orario}</span>
+                                <span class="booking-date-mobile">${data} - ${prenotazione.orario}</span>
                             </div>
-                            <div class="booking-details">
+                            <div class="booking-details-mobile">
                                 <p><i class="fas fa-phone"></i> ${prenotazione.telefono}</p>
                                 <p><i class="fas fa-users"></i> ${prenotazione.numero_giocatori} giocatori</p>
                                 ${prenotazione.note ? `<p><i class="fas fa-sticky-note"></i> ${prenotazione.note}</p>` : ''}
                             </div>
                         </div>
-                        <div class="booking-actions">
-                            <button class="btn btn-danger" onclick="deleteBooking(${prenotazione.id})">
+                        <div class="booking-actions-mobile">
+                            <button class="btn btn-danger mobile-btn" onclick="deleteBooking(${prenotazione.id})">
                                 <i class="fas fa-trash"></i> Cancella
                             </button>
                         </div>
@@ -281,34 +339,7 @@
             }
         }
 
-        // Carica orari per una data specifica
-        async function loadSchedule() {
-            if (!checkAuth()) return;
-            
-            const date = document.getElementById('scheduleDate').value;
-            if (!date) {
-                document.getElementById('scheduleList').innerHTML = '<p class="no-schedule">Seleziona una data per gestire gli orari</p>';
-                return;
-            }
-            
-            try {
-                const response = await fetch(`/api/disponibilita/${date}`);
-                if (!response.ok) {
-                    throw new Error('API non disponibile');
-                }
-                
-                const text = await response.text();
-                if (!text) {
-                    throw new Error('Risposta vuota');
-                }
-                
-                const slots = JSON.parse(text);
-                displaySchedule(slots, date);
-            } catch (error) {
-                console.error('Errore caricamento orari:', error);
-                document.getElementById('scheduleList').innerHTML = '<p class="no-schedule">Errore nel caricamento degli orari. Riprova più tardi.</p>';
-            }
-        }
+
 
         // Mostra orari
         function displaySchedule(slots, date) {
@@ -319,7 +350,18 @@
                 return;
             }
 
-            let html = '';
+            // Format date for display
+            const [year, month, day] = date.split('-').map(Number);
+            const displayDate = new Date(year, month - 1, day);
+            const formattedDate = displayDate.toLocaleDateString('it-IT', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+
+            let html = `<div class="schedule-date-header"><h4>Orari per ${formattedDate}</h4></div>`;
+            
             slots.forEach(slot => {
                 const isAvailable = slot.disponibile && slot.tipo !== 'bloccato';
                 const isOccupied = slot.tipo === 'occupato' || !slot.disponibile;
@@ -337,9 +379,12 @@
                 }
                 
                 html += `
-                    <div class="schedule-slot ${statusClass}" onclick="toggleSlotStatus('${slot.orario}', '${date}')">
-                        <div class="schedule-time">${slot.orario}</div>
-                        <div class="schedule-status ${statusClass}">${statusText}</div>
+                    <div class="schedule-slot-mobile ${statusClass}" onclick="showSlotOptions('${slot.orario}', '${date}', '${slot.tipo}')">
+                        <div class="schedule-time-mobile">${slot.orario}</div>
+                        <div class="schedule-status-mobile ${statusClass}">${statusText}</div>
+                        <div class="slot-actions-mobile">
+                            <i class="fas fa-ellipsis-h"></i>
+                        </div>
                     </div>
                 `;
             });
@@ -347,23 +392,77 @@
             scheduleList.innerHTML = html;
         }
 
-        // Toggle status slot (libero/occupato/bloccato)
-        async function toggleSlotStatus(orario, data) {
+        // Mostra opzioni per lo slot
+        function showSlotOptions(orario, data, currentTipo) {
             if (!checkAuth()) return;
             
-            const currentStatus = getCurrentSlotStatus(orario);
-            let newStatus;
+            const options = [];
             
-            // Ciclo: libero -> occupato -> bloccato -> libero
-            if (currentStatus === 'libero') {
-                newStatus = 'occupato';
-            } else if (currentStatus === 'occupato') {
-                newStatus = 'bloccato';
-            } else {
-                newStatus = 'libero';
+            if (currentTipo === 'libero') {
+                options.push({ label: 'Imposta come Occupato', value: 'occupato', icon: 'fas fa-user-times' });
+                options.push({ label: 'Imposta come Bloccato', value: 'bloccato', icon: 'fas fa-ban' });
+            } else if (currentTipo === 'occupato') {
+                options.push({ label: 'Libera Slot', value: 'libero', icon: 'fas fa-check' });
+                options.push({ label: 'Imposta come Bloccato', value: 'bloccato', icon: 'fas fa-ban' });
+            } else if (currentTipo === 'bloccato') {
+                options.push({ label: 'Libera Slot', value: 'libero', icon: 'fas fa-check' });
+                options.push({ label: 'Imposta come Occupato', value: 'occupato', icon: 'fas fa-user-times' });
             }
             
-            console.log(`Cambio status: ${orario} da ${currentStatus} a ${newStatus}`);
+            let optionsHTML = '';
+            options.forEach(option => {
+                if (option.value === 'bloccato') {
+                    optionsHTML += `
+                        <div class="slot-option-mobile" onclick="blockSlotWithNote('${orario}', '${data}')">
+                            <i class="${option.icon}"></i>
+                            <span>${option.label}</span>
+                        </div>
+                    `;
+                } else {
+                    optionsHTML += `
+                        <div class="slot-option-mobile" onclick="updateSlotStatus('${orario}', '${data}', '${option.value}')">
+                            <i class="${option.icon}"></i>
+                            <span>${option.label}</span>
+                        </div>
+                    `;
+                }
+            });
+            
+            // Crea modal per le opzioni
+            const modal = document.createElement('div');
+            modal.className = 'slot-options-modal-mobile';
+            modal.innerHTML = `
+                <div class="slot-options-content-mobile">
+                    <div class="slot-options-header-mobile">
+                        <h4>Gestione Slot ${orario}</h4>
+                        <button onclick="closeSlotOptions()" class="close-btn-mobile">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="slot-options-body-mobile">
+                        ${optionsHTML}
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            setTimeout(() => modal.classList.add('show'), 10);
+        }
+        
+        // Chiudi modal opzioni slot
+        function closeSlotOptions() {
+            const modal = document.querySelector('.slot-options-modal-mobile');
+            if (modal) {
+                modal.classList.remove('show');
+                setTimeout(() => modal.remove(), 300);
+            }
+        }
+        
+        // Aggiorna status slot
+        async function updateSlotStatus(orario, data, newTipo, motivo = '') {
+            if (!checkAuth()) return;
+            
+            console.log(`Cambio status: ${orario} a ${newTipo}${motivo ? ` con nota: ${motivo}` : ''}`);
             
             try {
                 const response = await fetch('/api/disponibilita/update', {
@@ -374,12 +473,16 @@
                     body: JSON.stringify({
                         data: data,
                         orario: orario,
-                        tipo: newStatus
+                        tipo: newTipo,
+                        motivo: motivo
                     })
                 });
                 
                 if (response.ok) {
+                    closeSlotOptions();
                     loadSchedule(); // Ricarica gli orari
+                    loadStats(); // Ricarica statistiche
+                    loadBlockedSlots(); // Ricarica slot bloccati
                 } else {
                     throw new Error('Errore aggiornamento');
                 }
@@ -389,23 +492,221 @@
             }
         }
 
-        // Ottieni status corrente di uno slot
-        function getCurrentSlotStatus(orario) {
-            const slotElement = document.querySelector(`[onclick*="${orario}"]`);
-            if (!slotElement) return 'libero';
+        // Carica slot bloccati
+        async function loadBlockedSlots() {
+            if (!checkAuth()) return;
             
-            if (slotElement.classList.contains('occupied')) return 'occupato';
-            if (slotElement.classList.contains('blocked')) return 'bloccato';
-            if (slotElement.classList.contains('available')) return 'libero';
-            return 'libero';
+            try {
+                const response = await fetch('/api/blocked-slots');
+                if (!response.ok) {
+                    throw new Error('API non disponibile');
+                }
+                
+                const text = await response.text();
+                if (!text) {
+                    throw new Error('Risposta vuota');
+                }
+                
+                const blockedSlots = JSON.parse(text);
+                displayBlockedSlots(blockedSlots);
+            } catch (error) {
+                console.error('Errore caricamento slot bloccati:', error);
+                document.getElementById('blockedSlotsList').innerHTML = '<p class="no-blocked-slots">Errore nel caricamento degli slot bloccati. Riprova più tardi.</p>';
+            }
+        }
+
+        // Mostra slot bloccati
+        function displayBlockedSlots(blockedSlots) {
+            const blockedSlotsList = document.getElementById('blockedSlotsList');
+            
+            if (blockedSlots.length === 0) {
+                blockedSlotsList.innerHTML = '<p class="no-blocked-slots">Nessuno slot bloccato trovato</p>';
+                return;
+            }
+
+            let html = '';
+            blockedSlots.forEach(slot => {
+                // Crea data locale per evitare problemi di fuso orario
+                const [year, month, day] = slot.data.split('-').map(Number);
+                const slotDate = new Date(year, month - 1, day);
+                const data = slotDate.toLocaleDateString('it-IT');
+                
+                html += `
+                    <div class="blocked-slot-item-mobile">
+                        <div class="blocked-slot-info-mobile">
+                            <div class="blocked-slot-header-mobile">
+                                <h4>${slot.orario}</h4>
+                                <span class="blocked-slot-date-mobile">${data}</span>
+                            </div>
+                            <div class="blocked-slot-details-mobile">
+                                <p><i class="fas fa-tag"></i> Tipo: <strong>${slot.tipo}</strong></p>
+                                ${slot.motivo ? `<p><i class="fas fa-sticky-note"></i> Note: ${slot.motivo}</p>` : '<p><i class="fas fa-sticky-note"></i> <em>Nessuna nota</em></p>'}
+                            </div>
+                        </div>
+                        <div class="blocked-slot-actions-mobile">
+                            <button class="btn btn-primary mobile-btn" onclick="editBlockedSlot('${slot.data}', '${slot.orario}', '${slot.motivo || ''}')">
+                                <i class="fas fa-edit"></i> Modifica
+                            </button>
+                            <button class="btn btn-success mobile-btn" onclick="unblockSlot('${slot.data}', '${slot.orario}')">
+                                <i class="fas fa-check"></i> Libera
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            blockedSlotsList.innerHTML = html;
+        }
+
+        // Modifica slot bloccato
+        function editBlockedSlot(data, orario, currentMotivo) {
+            const nuovoMotivo = prompt('Inserisci una nota per questo slot bloccato:', currentMotivo);
+            if (nuovoMotivo !== null) {
+                updateSlotStatus(orario, data, 'bloccato', nuovoMotivo);
+            }
+        }
+
+        // Libera slot bloccato
+        function unblockSlot(data, orario) {
+            if (confirm('Sei sicuro di voler liberare questo slot?')) {
+                updateSlotStatus(orario, data, 'libero');
+            }
+        }
+
+        // Blocca slot con nota
+        function blockSlotWithNote(orario, data) {
+            closeSlotOptions();
+            const motivo = prompt('Inserisci una nota per questo slot bloccato (opzionale):');
+            if (motivo !== null) {
+                updateSlotStatus(orario, data, 'bloccato', motivo);
+            }
+        }
+
+        // Admin Calendar Variables
+        let currentMonth = new Date().getMonth();
+        let currentYear = new Date().getFullYear();
+        let selectedDate = null;
+
+        // Initialize admin calendar
+        function initAdminCalendar() {
+            updateAdminCalendar();
+        }
+
+        // Update admin calendar display
+        function updateAdminCalendar() {
+            const monthNames = [
+                'Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno',
+                'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'
+            ];
+            
+            document.getElementById('adminCalendarMonth').textContent = 
+                `${monthNames[currentMonth]} ${currentYear}`;
+            
+            generateAdminCalendarDays();
+        }
+
+        // Generate calendar days
+        function generateAdminCalendarDays() {
+            const calendarDays = document.getElementById('adminCalendarDays');
+            const firstDay = new Date(currentYear, currentMonth, 1);
+            const lastDay = new Date(currentYear, currentMonth + 1, 0);
+            const startDate = new Date(firstDay);
+            startDate.setDate(startDate.getDate() - firstDay.getDay());
+            
+            let html = '';
+            const today = new Date();
+            
+            for (let i = 0; i < 42; i++) {
+                const currentDate = new Date(startDate);
+                currentDate.setDate(startDate.getDate() + i);
+                
+                const isCurrentMonth = currentDate.getMonth() === currentMonth;
+                const isToday = currentDate.toDateString() === today.toDateString();
+                const isSelected = selectedDate && currentDate.toDateString() === selectedDate.toDateString();
+                const isDisabled = currentDate < today;
+                
+                let dayClass = 'admin-calendar-day';
+                if (!isCurrentMonth) dayClass += ' disabled';
+                if (isToday) dayClass += ' today';
+                if (isSelected) dayClass += ' selected';
+                if (isDisabled) dayClass += ' disabled';
+                
+                const dateString = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(currentDate.getDate()).padStart(2, '0')}`;
+                
+                html += `
+                    <div class="${dayClass}" 
+                         onclick="${!isDisabled && isCurrentMonth ? `selectAdminDate('${dateString}')` : ''}"
+                         data-date="${dateString}">
+                        ${currentDate.getDate()}
+                    </div>
+                `;
+            }
+            
+            calendarDays.innerHTML = html;
+        }
+
+        // Select date in admin calendar
+        function selectAdminDate(dateString) {
+            const [year, month, day] = dateString.split('-').map(Number);
+            selectedDate = new Date(year, month - 1, day);
+            updateAdminCalendar();
+            loadScheduleForDate(dateString);
+        }
+
+        // Previous month
+        function previousMonth() {
+            currentMonth--;
+            if (currentMonth < 0) {
+                currentMonth = 11;
+                currentYear--;
+            }
+            updateAdminCalendar();
+        }
+
+        // Next month
+        function nextMonth() {
+            currentMonth++;
+            if (currentMonth > 11) {
+                currentMonth = 0;
+                currentYear++;
+            }
+            updateAdminCalendar();
+        }
+
+        // Load schedule for specific date
+        async function loadScheduleForDate(dateString) {
+            if (!checkAuth()) return;
+            
+            try {
+                const response = await fetch(`/api/disponibilita/${dateString}`);
+                if (!response.ok) {
+                    throw new Error('API non disponibile');
+                }
+                
+                const text = await response.text();
+                if (!text) {
+                    throw new Error('Risposta vuota');
+                }
+                
+                const slots = JSON.parse(text);
+                displaySchedule(slots, dateString);
+            } catch (error) {
+                console.error('Errore caricamento orari:', error);
+                document.getElementById('scheduleList').innerHTML = '<p class="no-schedule">Errore nel caricamento degli orari. Riprova più tardi.</p>';
+            }
         }
 
         // Inizializzazione
         document.addEventListener('DOMContentLoaded', function() {
             if (!checkAuth()) return;
             
+            // Initialize admin calendar
+            initAdminCalendar();
+            
+            // Load all data
             loadStats();
             loadAllBookings();
+            loadBlockedSlots();
         });
     </script>
 </body>

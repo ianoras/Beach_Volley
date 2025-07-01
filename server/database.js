@@ -217,13 +217,19 @@ function verificaDisponibilita(data, orario) {
 }
 
 // Funzioni per gestire gli orari bloccati
-function getOrariBloccati(data) {
+function getOrariBloccati(data = null) {
     return new Promise((resolve, reject) => {
-        db.all(`
-            SELECT orario, tipo, motivo 
-            FROM orari_bloccati 
-            WHERE data = ?
-        `, [data], (err, rows) => {
+        let query = 'SELECT data, orario, tipo, motivo FROM orari_bloccati';
+        let params = [];
+        
+        if (data) {
+            query += ' WHERE data = ?';
+            params = [data];
+        }
+        
+        query += ' ORDER BY data, orario';
+        
+        db.all(query, params, (err, rows) => {
             if (err) {
                 reject(err);
             } else {
@@ -233,7 +239,7 @@ function getOrariBloccati(data) {
     });
 }
 
-function updateOrarioStatus(data, orario, tipo) {
+function updateOrarioStatus(data, orario, tipo, motivo = '') {
     return new Promise((resolve, reject) => {
         if (tipo === 'libero') {
             // Rimuovi dalla tabella orari bloccati
@@ -250,9 +256,9 @@ function updateOrarioStatus(data, orario, tipo) {
         } else {
             // Inserisci o aggiorna nella tabella orari bloccati
             db.run(`
-                INSERT OR REPLACE INTO orari_bloccati (data, orario, tipo) 
-                VALUES (?, ?, ?)
-            `, [data, orario, tipo], function(err) {
+                INSERT OR REPLACE INTO orari_bloccati (data, orario, tipo, motivo) 
+                VALUES (?, ?, ?, ?)
+            `, [data, orario, tipo, motivo], function(err) {
                 if (err) {
                     reject(err);
                 } else {

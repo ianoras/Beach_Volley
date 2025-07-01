@@ -47,6 +47,12 @@
                             </div>
                         </div>
                         
+                        <!-- Messaggio di errore -->
+                        <div id="errorMessage" class="error-message" style="display: none;">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <span id="errorText"></span>
+                        </div>
+                        
                         <button type="submit" class="btn btn-primary">
                             <i class="fas fa-sign-in-alt"></i> Accedi
                         </button>
@@ -96,6 +102,25 @@
             }
         }
         
+        // Mostra messaggio di errore
+        function showError(message) {
+            const errorMessage = document.getElementById('errorMessage');
+            const errorText = document.getElementById('errorText');
+            
+            errorText.textContent = message;
+            errorMessage.style.display = 'flex';
+            
+            // Nascondi il messaggio dopo 5 secondi
+            setTimeout(() => {
+                errorMessage.style.display = 'none';
+            }, 5000);
+        }
+        
+        // Nascondi messaggio di errore
+        function hideError() {
+            document.getElementById('errorMessage').style.display = 'none';
+        }
+        
         document.getElementById('loginForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
@@ -132,7 +157,8 @@
                     // Reindirizza alla dashboard admin
                     window.location.href = '/admin';
                 } else {
-                    alert('Password non corretta!');
+                    // Mostra messaggio di errore
+                    showError(result.message || 'Password non corretta!');
                     document.getElementById('password').value = '';
                 }
             } catch (error) {

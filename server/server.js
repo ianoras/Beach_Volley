@@ -104,6 +104,9 @@ app.post('/api/prenotazioni', async (req, res) => {
         const prenotazione = { nome, telefono, data, orario, numero_giocatori, note };
         const id = await db.creaPrenotazione(prenotazione);
         
+        // Blocca automaticamente lo slot come "occupato"
+        await db.updateOrarioStatus(data, orario, 'occupato');
+        
         res.json({ 
             success: true, 
             id, 
@@ -119,10 +122,19 @@ app.delete('/api/prenotazioni/:id', async (req, res) => {
     try {
         const { id } = req.params;
         
+        // Prima ottieni i dettagli della prenotazione
+        const prenotazione = await db.getPrenotazioneById(id);
+        if (!prenotazione) {
+            return res.status(404).json({ error: 'Prenotazione non trovata' });
+        }
+        
         // Cancella prenotazione
         const cancellata = await db.cancellaPrenotazione(id);
         
         if (cancellata) {
+            // Libera lo slot
+            await db.updateOrarioStatus(prenotazione.data, prenotazione.orario, 'libero');
+            
             res.json({ 
                 success: true, 
                 message: 'Prenotazione cancellata con successo' 
@@ -131,6 +143,7 @@ app.delete('/api/prenotazioni/:id', async (req, res) => {
             res.status(404).json({ error: 'Prenotazione non trovata' });
         }
     } catch (error) {
+        console.error('Errore cancellazione prenotazione:', error);
         res.status(500).json({ error: error.message });
     }
 });
@@ -140,21 +153,67 @@ app.get('/api/disponibilita/:data', async (req, res) => {
     try {
         const { data } = req.params;
         const prenotazioni = await db.getPrenotazioni(data);
+        const orariBloccati = await db.getOrariBloccati(data);
         
         // Genera orari disponibili (16:00-23:00, slot di 1 ora)
         const orari = [];
         for (let ora = 16; ora < 23; ora++) {
             const orario = `${ora.toString().padStart(2, '0')}:00`;
             const occupato = prenotazioni.some(p => p.orario === orario);
+            const bloccato = orariBloccati.some(b => b.orario === orario);
+            
+            let tipo = 'libero';
+            if (bloccato) {
+                tipo = 'bloccato';
+            } else if (occupato) {
+                tipo = 'occupato';
+            }
             
             orari.push({
                 orario,
-                disponibile: !occupato,
+                disponibile: !occupato && !bloccato,
+                tipo,
                 prenotazione: occupato ? prenotazioni.find(p => p.orario === orario) : null
             });
         }
         
+        console.log(`Disponibilità per ${data}:`, orari);
         res.json(orari);
+    } catch (error) {
+        console.error('Errore disponibilità:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// GET - Ottieni tutti gli slot bloccati
+app.get('/api/blocked-slots', async (req, res) => {
+    try {
+        const orariBloccati = await db.getOrariBloccati();
+        res.json(orariBloccati);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// POST - Aggiorna status orario (admin)
+app.post('/api/disponibilita/update', async (req, res) => {
+    try {
+        const { data, orario, tipo, motivo } = req.body;
+        
+        if (!data || !orario || !tipo) {
+            return res.status(400).json({ error: 'Data, orario e tipo sono obbligatori' });
+        }
+        
+        if (!['libero', 'occupato', 'bloccato'].includes(tipo)) {
+            return res.status(400).json({ error: 'Tipo non valido' });
+        }
+        
+        await db.updateOrarioStatus(data, orario, tipo, motivo);
+        
+        res.json({ 
+            success: true, 
+            message: `Orario ${orario} aggiornato come ${tipo}` 
+        });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -210,6 +269,10 @@ app.get('/api/stats', async (req, res) => {
         const oggi = new Date().toISOString().split('T')[0];
         const prenotazioniOggi = prenotazioni.filter(p => p.data === oggi);
         
+        // Conta slot bloccati totali
+        const orariBloccati = await db.getOrariBloccati();
+        const slotBloccati = orariBloccati.length;
+        
         const stats = {
             totali: prenotazioni.length,
             oggi: prenotazioniOggi.length,
@@ -218,7 +281,8 @@ app.get('/api/stats', async (req, res) => {
                 const oggi = new Date();
                 const unaSettimanaFa = new Date(oggi.getTime() - 7 * 24 * 60 * 60 * 1000);
                 return data >= unaSettimanaFa && data <= oggi;
-            }).length
+            }).length,
+            slotBloccati: slotBloccati
         };
         
         res.json(stats);

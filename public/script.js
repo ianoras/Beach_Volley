@@ -60,6 +60,44 @@ async function loadConfig() {
     }
 }
 
+// Funzioni per scroll automatico e navigazione smart
+function scrollToSection(sectionId, smooth = true) {
+    const section = document.getElementById(sectionId);
+    if (section) {
+        const offset = 80; // Offset per l'header
+        const targetPosition = section.offsetTop - offset;
+        
+        if (smooth) {
+            window.scrollTo({
+                top: targetPosition,
+                behavior: 'smooth'
+            });
+        } else {
+            window.scrollTo(0, targetPosition);
+        }
+    }
+}
+
+function highlightSection(sectionId) {
+    // Rimuovi highlight precedenti
+    document.querySelectorAll('.booking-container > div').forEach(div => {
+        div.classList.remove('highlight-section');
+    });
+    
+    // Aggiungi highlight alla sezione corrente
+    const section = document.getElementById(sectionId);
+    if (section) {
+        section.classList.add('highlight-section');
+        
+        // Rimuovi highlight dopo 2 secondi
+        setTimeout(() => {
+            section.classList.remove('highlight-section');
+        }, 2000);
+    }
+}
+
+
+
 // Setup event listeners
 function setupEventListeners() {
     if (prevMonthBtn) {
@@ -78,6 +116,90 @@ function setupEventListeners() {
 
     if (bookingForm) {
         bookingForm.addEventListener('submit', handleBookingSubmit);
+    }
+    
+    // Setup focus automatico tra i campi del form
+    setupFormFocus();
+}
+
+// Setup focus automatico tra i campi del form
+function setupFormFocus() {
+    const nomeInput = document.getElementById('nome');
+    const telefonoInput = document.getElementById('telefono');
+    const numeroGiocatoriSelect = document.getElementById('numero_giocatori');
+    const noteTextarea = document.getElementById('note');
+    const submitBtn = document.querySelector('button[type="submit"]');
+    
+    // Quando si completa il nome, vai al telefono
+    if (nomeInput) {
+        nomeInput.addEventListener('input', function() {
+            if (this.value.length >= 3) { // Se ha almeno 3 caratteri
+                setTimeout(() => {
+                    if (telefonoInput) {
+                        telefonoInput.focus();
+                    }
+                }, 500);
+            }
+        });
+    }
+    
+    // Quando si completa il telefono, vai al numero giocatori
+    if (telefonoInput) {
+        telefonoInput.addEventListener('input', function() {
+            if (this.value.length >= 10) { // Se ha almeno 10 caratteri
+                setTimeout(() => {
+                    if (numeroGiocatoriSelect) {
+                        numeroGiocatoriSelect.focus();
+                    }
+                }, 500);
+            }
+        });
+    }
+    
+    // Quando si seleziona il numero giocatori, vai al bottone conferma
+    if (numeroGiocatoriSelect) {
+        numeroGiocatoriSelect.addEventListener('change', function() {
+            if (this.value) {
+                setTimeout(() => {
+                    if (submitBtn && !submitBtn.disabled) {
+                        submitBtn.focus();
+                        // Scroll al bottone se necessario
+                        submitBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                }, 300);
+            }
+        });
+    }
+    
+    // Enter key navigation
+    if (nomeInput) {
+        nomeInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && this.value.length >= 3) {
+                e.preventDefault();
+                if (telefonoInput) telefonoInput.focus();
+            }
+        });
+    }
+    
+    if (telefonoInput) {
+        telefonoInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && this.value.length >= 10) {
+                e.preventDefault();
+                if (numeroGiocatoriSelect) numeroGiocatoriSelect.focus();
+            }
+        });
+    }
+    
+    if (numeroGiocatoriSelect) {
+        numeroGiocatoriSelect.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && this.value) {
+                e.preventDefault();
+                if (submitBtn && !submitBtn.disabled) {
+                    submitBtn.focus();
+                    submitBtn.click();
+                }
+            }
+        });
     }
 }
 
@@ -123,7 +245,11 @@ function renderCalendar() {
         }
         
         const dayNumber = currentDay.getDate();
-        calendarHTML += `<div class="${dayClass}" data-date="${currentDay.toISOString().split('T')[0]}">${dayNumber}</div>`;
+        // Usa formato data locale per evitare problemi di fuso orario
+        const dateString = currentDay.getFullYear() + '-' + 
+                          String(currentDay.getMonth() + 1).padStart(2, '0') + '-' + 
+                          String(currentDay.getDate()).padStart(2, '0');
+        calendarHTML += `<div class="${dayClass}" data-date="${dateString}">${dayNumber}</div>`;
     }
     
     if (calendarDays) {
@@ -138,7 +264,9 @@ function renderCalendar() {
 
 // Seleziona data
 async function selectDate(dateString) {
-    selectedDate = new Date(dateString);
+    // Crea data locale per evitare problemi di fuso orario
+    const [year, month, day] = dateString.split('-').map(Number);
+    selectedDate = new Date(year, month - 1, day);
     selectedTime = null;
     
     // Aggiorna UI calendario
@@ -155,16 +283,24 @@ async function selectDate(dateString) {
     
     // Aggiorna riepilogo
     updateBookingSummary();
+    
+    // Scroll automatico agli orari disponibili
+    setTimeout(() => {
+        scrollToSection('time-selector');
+        highlightSection('time-selector');
+    }, 300);
 }
 
 // Carica orari disponibili
 async function loadTimeSlots(dateString) {
     try {
         showLoading(true);
+        console.log('Caricamento orari per:', dateString);
+        
         const response = await fetch(`/api/disponibilita/${dateString}`);
         
         if (!response.ok) {
-            throw new Error('API non disponibile');
+            throw new Error(`API non disponibile: ${response.status}`);
         }
         
         const text = await response.text();
@@ -172,18 +308,31 @@ async function loadTimeSlots(dateString) {
             throw new Error('Risposta vuota');
         }
         
+        console.log('Risposta API:', text);
         const data = JSON.parse(text);
         
         // Gestisce sia array che oggetto (per compatibilità Netlify)
         const slots = Array.isArray(data) ? data : (data.body ? JSON.parse(data.body) : []);
         
+        console.log('Slot elaborati:', slots);
+        
         let slotsHTML = '';
         slots.forEach(slot => {
-            const slotClass = slot.disponibile ? 'time-slot' : 'time-slot occupied';
-            const slotText = slot.disponibile ? slot.orario : `${slot.orario} - Occupato`;
+            let slotClass = 'time-slot';
+            let slotText = slot.orario;
+            
+            if (slot.tipo === 'occupato') {
+                slotClass += ' occupied';
+                slotText += ' - Occupato';
+            } else if (slot.tipo === 'bloccato') {
+                slotClass += ' blocked';
+                slotText += ' - Bloccato';
+            }
+            
+            const isClickable = slot.disponibile && slot.tipo === 'libero';
             
             slotsHTML += `
-                <div class="${slotClass}" data-time="${slot.orario}" ${slot.disponibile ? 'onclick="selectTime(\'' + slot.orario + '\')"' : ''}>
+                <div class="${slotClass}" data-time="${slot.orario}" data-tipo="${slot.tipo}" ${isClickable ? 'onclick="selectTime(\'' + slot.orario + '\')"' : ''}>
                     ${slotText}
                 </div>
             `;
@@ -199,7 +348,7 @@ async function loadTimeSlots(dateString) {
         if (timeSlots) {
             timeSlots.innerHTML = '<p class="error">Errore nel caricamento degli orari. Riprova più tardi.</p>';
         }
-
+        showLoading(false);
     }
 }
 
@@ -218,6 +367,18 @@ function selectTime(time) {
     
     // Aggiorna riepilogo
     updateBookingSummary();
+    
+    // Scroll automatico al form di prenotazione
+    setTimeout(() => {
+        scrollToSection('booking-form');
+        highlightSection('booking-form');
+        
+        // Focus sul primo campo del form
+        const firstInput = document.querySelector('#booking-form input');
+        if (firstInput) {
+            firstInput.focus();
+        }
+    }, 300);
 }
 
 // Aggiorna riepilogo prenotazione
@@ -281,10 +442,15 @@ async function handleBookingSubmit(e) {
     }
     
     const formData = new FormData(bookingForm);
+    // Formatta la data correttamente per l'API
+    const dataString = selectedDate.getFullYear() + '-' + 
+                      String(selectedDate.getMonth() + 1).padStart(2, '0') + '-' + 
+                      String(selectedDate.getDate()).padStart(2, '0');
+    
     const bookingData = {
         nome: formData.get('nome'),
         telefono: formData.get('telefono'),
-        data: selectedDate.toISOString().split('T')[0],
+        data: dataString,
         orario: selectedTime,
         numero_giocatori: parseInt(formData.get('numero_giocatori')),
         note: formData.get('note')
@@ -348,7 +514,11 @@ function resetForm() {
 
 // Mostra conferma prenotazione
 function showBookingConfirmation(bookingData) {
-    const dataFormatted = new Date(bookingData.data).toLocaleDateString('it-IT', {
+    // Crea data locale per evitare problemi di fuso orario
+    const [year, month, day] = bookingData.data.split('-').map(Number);
+    const bookingDate = new Date(year, month - 1, day);
+    
+    const dataFormatted = bookingDate.toLocaleDateString('it-IT', {
         weekday: 'long',
         year: 'numeric',
         month: 'long',

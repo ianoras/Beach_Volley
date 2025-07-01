@@ -229,45 +229,75 @@ const handler = async (event, context) => {
         isInitialized = true;
     }
     
-    return new Promise((resolve, reject) => {
-        const server = app.listen(0, () => {
-            const port = server.address().port;
-            const url = `http://localhost:${port}`;
-            
-            // Simula la richiesta HTTP
-            const http = require('http');
-            const urlObj = new URL(event.path, url);
-            
-            const req = http.request({
-                hostname: 'localhost',
-                port: port,
-                path: urlObj.pathname + urlObj.search,
-                method: event.httpMethod,
-                headers: event.headers || {}
-            }, (res) => {
-                let body = '';
-                res.on('data', chunk => body += chunk);
-                res.on('end', () => {
-                    server.close();
-                    resolve({
-                        statusCode: res.statusCode,
-                        headers: res.headers,
-                        body: body
-                    });
-                });
-            });
-            
-            req.on('error', (err) => {
-                server.close();
-                reject(err);
-            });
-            
-            if (event.body) {
-                req.write(event.body);
+    // Estrai path e query parameters
+    const path = event.path.replace('/.netlify/functions/api', '');
+    const queryString = event.queryStringParameters ? 
+        '?' + Object.entries(event.queryStringParameters)
+            .map(([key, value]) => `${key}=${encodeURIComponent(value)}`)
+            .join('&') : '';
+    
+    // Crea mock request
+    const mockReq = {
+        method: event.httpMethod,
+        url: path + queryString,
+        path: path,
+        query: event.queryStringParameters || {},
+        body: event.body ? JSON.parse(event.body) : {},
+        headers: event.headers || {}
+    };
+    
+    // Crea mock response
+    let responseBody = '';
+    let responseStatus = 200;
+    let responseHeaders = {};
+    
+    const mockRes = {
+        status: (code) => {
+            responseStatus = code;
+            return mockRes;
+        },
+        json: (data) => {
+            responseBody = JSON.stringify(data);
+            responseHeaders['Content-Type'] = 'application/json';
+        },
+        send: (data) => {
+            responseBody = data;
+        }
+    };
+    
+    // Simula la richiesta
+    try {
+        const http = require('http');
+        const url = require('url');
+        
+        // Trova la route corrispondente
+        const route = app._router.stack.find(layer => {
+            if (layer.route) {
+                const routePath = layer.route.path;
+                const routeMethod = Object.keys(layer.route.methods)[0];
+                return routeMethod === event.httpMethod.toLowerCase() && 
+                       (routePath === path || routePath === path.replace(/\/$/, ''));
             }
-            req.end();
+            return false;
         });
-    });
+        
+        if (route) {
+            await route.route.stack[0].handle(mockReq, mockRes);
+        } else {
+            responseStatus = 404;
+            responseBody = JSON.stringify({ error: 'Endpoint non trovato' });
+        }
+    } catch (error) {
+        console.error('Errore handler:', error);
+        responseStatus = 500;
+        responseBody = JSON.stringify({ error: 'Errore interno del server' });
+    }
+    
+    return {
+        statusCode: responseStatus,
+        headers: responseHeaders,
+        body: responseBody
+    };
 };
 
 module.exports = { handler }; 

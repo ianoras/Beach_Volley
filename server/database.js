@@ -28,17 +28,35 @@ function initDatabase() {
                 return;
             }
             
-            // Tabella configurazioni
+                    // Tabella configurazioni
+        db.run(`
+            CREATE TABLE IF NOT EXISTS configurazioni (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                chiave TEXT UNIQUE NOT NULL,
+                valore TEXT NOT NULL,
+                descrizione TEXT
+            )
+        `, (err) => {
+            if (err) {
+                console.error('Errore creazione tabella configurazioni:', err);
+                reject(err);
+                return;
+            }
+            
+            // Tabella orari bloccati
             db.run(`
-                CREATE TABLE IF NOT EXISTS configurazioni (
+                CREATE TABLE IF NOT EXISTS orari_bloccati (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    chiave TEXT UNIQUE NOT NULL,
-                    valore TEXT NOT NULL,
-                    descrizione TEXT
+                    data TEXT NOT NULL,
+                    orario TEXT NOT NULL,
+                    tipo TEXT NOT NULL DEFAULT 'bloccato',
+                    motivo TEXT,
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    UNIQUE(data, orario)
                 )
             `, (err) => {
                 if (err) {
-                    console.error('Errore creazione tabella configurazioni:', err);
+                    console.error('Errore creazione tabella orari_bloccati:', err);
                     reject(err);
                     return;
                 }
@@ -49,6 +67,7 @@ function initDatabase() {
                     resolve();
                 }).catch(reject);
             });
+        });
         });
     });
 }
@@ -180,9 +199,67 @@ function verificaDisponibilita(data, orario) {
             if (err) {
                 reject(err);
             } else {
-                resolve(row.count === 0);
+                // Verifica anche se l'orario è bloccato
+                db.get(`
+                    SELECT COUNT(*) as blocked_count 
+                    FROM orari_bloccati 
+                    WHERE data = ? AND orario = ?
+                `, [data, orario], (err2, row2) => {
+                    if (err2) {
+                        reject(err2);
+                    } else {
+                        resolve(row.count === 0 && row2.blocked_count === 0);
+                    }
+                });
             }
         });
+    });
+}
+
+// Funzioni per gestire gli orari bloccati
+function getOrariBloccati(data) {
+    return new Promise((resolve, reject) => {
+        db.all(`
+            SELECT orario, tipo, motivo 
+            FROM orari_bloccati 
+            WHERE data = ?
+        `, [data], (err, rows) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve(rows);
+            }
+        });
+    });
+}
+
+function updateOrarioStatus(data, orario, tipo) {
+    return new Promise((resolve, reject) => {
+        if (tipo === 'libero') {
+            // Rimuovi dalla tabella orari bloccati
+            db.run(`
+                DELETE FROM orari_bloccati 
+                WHERE data = ? AND orario = ?
+            `, [data, orario], function(err) {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve();
+                }
+            });
+        } else {
+            // Inserisci o aggiorna nella tabella orari bloccati
+            db.run(`
+                INSERT OR REPLACE INTO orari_bloccati (data, orario, tipo) 
+                VALUES (?, ?, ?)
+            `, [data, orario, tipo], function(err) {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve();
+                }
+            });
+        }
     });
 }
 
@@ -195,5 +272,7 @@ module.exports = {
     getConfigurazione,
     setConfigurazione,
     verificaDisponibilita,
+    getOrariBloccati,
+    updateOrarioStatus,
     db
 }; 

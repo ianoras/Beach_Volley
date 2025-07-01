@@ -122,21 +122,55 @@ app.get('/disponibilita/:data', async (req, res) => {
     try {
         const { data } = req.params;
         const prenotazioni = await db.getPrenotazioni(data);
+        const orariBloccati = await db.getOrariBloccati(data);
         
         // Genera orari disponibili (16:00-23:00, slot di 1 ora)
         const orari = [];
         for (let ora = 16; ora < 23; ora++) {
             const orario = `${ora.toString().padStart(2, '0')}:00`;
             const occupato = prenotazioni.some(p => p.orario === orario);
+            const bloccato = orariBloccati.some(b => b.orario === orario);
+            
+            let tipo = 'libero';
+            if (bloccato) {
+                tipo = 'bloccato';
+            } else if (occupato) {
+                tipo = 'occupato';
+            }
             
             orari.push({
                 orario,
-                disponibile: !occupato,
+                disponibile: !occupato && !bloccato,
+                tipo,
                 prenotazione: occupato ? prenotazioni.find(p => p.orario === orario) : null
             });
         }
         
         res.json(orari);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// POST - Aggiorna status orario (admin)
+app.post('/disponibilita/update', async (req, res) => {
+    try {
+        const { data, orario, tipo } = req.body;
+        
+        if (!data || !orario || !tipo) {
+            return res.status(400).json({ error: 'Data, orario e tipo sono obbligatori' });
+        }
+        
+        if (!['libero', 'occupato', 'bloccato'].includes(tipo)) {
+            return res.status(400).json({ error: 'Tipo non valido' });
+        }
+        
+        await db.updateOrarioStatus(data, orario, tipo);
+        
+        res.json({ 
+            success: true, 
+            message: `Orario ${orario} aggiornato come ${tipo}` 
+        });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }

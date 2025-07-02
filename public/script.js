@@ -11,11 +11,7 @@ const API_BASE_URL = window.location.hostname === 'localhost' || window.location
 
 // Funzione per ottenere l'URL base delle API
 function getApiBaseUrl() {
-    // Se siamo su Netlify (produzione), usa le funzioni serverless
-    if (window.location.hostname.includes('netlify.app') || window.location.hostname.includes('netlify.com')) {
-        return '/.netlify/functions/api';
-    }
-    // Altrimenti usa il server locale
+    // Usa sempre il path relativo /api che Netlify reindirizza alle funzioni serverless
     return '/api';
 }
 
@@ -42,6 +38,11 @@ async function initApp() {
         renderCalendar();
         setupEventListeners();
         showLoading(false);
+        
+        // Scroll automatico al calendario dopo il caricamento
+        setTimeout(() => {
+            scrollToSection('date-selector');
+        }, 500);
     } catch (error) {
         console.error('Errore inizializzazione:', error);
         showLoading(false);
@@ -66,7 +67,7 @@ async function loadConfig() {
         console.log('Usando configurazioni di default (modalità locale)');
         // Configurazioni di default per il beach volley
         config = {
-            orariApertura: '16:00-23:00',
+            orariApertura: '18:00-23:00',
             durataSlot: 60,
             maxGiocatori: 12,
             prezzoUnder18: 3,
@@ -171,17 +172,12 @@ function setupFormFocus() {
         });
     }
     
-    // Quando si seleziona il numero giocatori, vai al bottone conferma
+    // Quando si seleziona il numero giocatori, il form è completo
     if (numeroGiocatoriSelect) {
         numeroGiocatoriSelect.addEventListener('change', function() {
             if (this.value) {
-                setTimeout(() => {
-                    if (submitBtn && !submitBtn.disabled) {
-                        submitBtn.focus();
-                        // Scroll al bottone se necessario
-                        submitBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    }
-                }, 300);
+                // Form completato, bottone già abilitato
+                console.log('✅ Form completato');
             }
         });
     }
@@ -209,10 +205,8 @@ function setupFormFocus() {
         numeroGiocatoriSelect.addEventListener('keypress', function(e) {
             if (e.key === 'Enter' && this.value) {
                 e.preventDefault();
-                if (submitBtn && !submitBtn.disabled) {
-                    submitBtn.focus();
-                    submitBtn.click();
-                }
+                // Form completato, utente può cliccare manualmente
+                console.log('✅ Form completato con Enter');
             }
         });
     }
@@ -540,7 +534,7 @@ function showBookingConfirmation(bookingData) {
     // Genera messaggio WhatsApp
     const whatsappMessage = `🏐 *PRENOTAZIONE BEACH VOLLEY*
 
-Ciao! Vorrei prenotare il campetto:
+Ciao! ho effettuato una prenotazione :
 
 👤 *Nome:* ${bookingData.nome}
 📅 *Data:* ${dataFormatted}

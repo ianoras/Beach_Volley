@@ -1,99 +1,163 @@
-# 🏐 Preturo Beach Volley - Sistema Prenotazioni
+# 🏐 Beach Volley Preturo - Sistema Prenotazioni
 
-Sistema di prenotazione per il campetto di beach volley di Preturo (Montoro AV).
+Sistema di prenotazioni per il campetto di Beach Volley a Preturo con integrazione Google Calendar.
 
-## 🎯 Funzionalità
+## 🚀 Caratteristiche
 
-- 📅 **Calendario interattivo** con disponibilità in tempo reale
-- 🏐 **Prenotazione semplice** con form intuitivo
-- 📱 **Integrazione WhatsApp** diretta (gratuita)
-- 🔒 **Blocco automatico** delle prenotazioni esistenti
-- 👨‍💼 **Dashboard admin** protetta per gestione
-- 📍 **Mappa Google Maps** integrata
-- 📱 **Design responsive** ottimizzato per mobile
+- ✅ Prenotazioni online in tempo reale
+- ✅ Integrazione automatica con Google Calendar
+- ✅ Gestione slot disponibili/bloccati
+- ✅ Interfaccia admin per la gestione
+- ✅ Database cloud (MongoDB Atlas)
+- ✅ Deploy su Netlify (serverless)
 
-## 🚀 Installazione Rapida
+## 🛠️ Tecnologie
 
-1. **Installa le dipendenze:**
+- **Frontend**: HTML, CSS, JavaScript vanilla
+- **Backend**: Node.js, Express, Netlify Functions
+- **Database**: MongoDB Atlas
+- **Calendar**: Google Calendar API
+- **Deploy**: Netlify
+
+## 📋 Setup e Installazione
+
+### 1. Clona il repository
+```bash
+git clone <repository-url>
+cd beach_volley
+```
+
+### 2. Installa le dipendenze
 ```bash
 npm install
 ```
 
-2. **Avvia il server:**
+### 3. Configura le variabili d'ambiente
+
+Copia `.env.example` in `.env` e configura:
+
 ```bash
-npm start
+cp .env.example .env
 ```
 
-3. **Apri il browser su:** `http://localhost:3000`
+#### Database MongoDB Atlas
+1. Crea un account su [MongoDB Atlas](https://www.mongodb.com/atlas)
+2. Crea un nuovo cluster (gratuito)
+3. Crea un utente database
+4. Ottieni la connection string e inseriscila in `MONGODB_URI`
 
-## 🔐 Accesso Admin
+#### Google Calendar API
+1. Vai su [Google Cloud Console](https://console.cloud.google.com/)
+2. Crea un nuovo progetto
+3. Abilita Google Calendar API
+4. Crea credenziali (Service Account Key è più semplice)
+5. Scarica il file JSON delle credenziali
+6. Inserisci il contenuto in `GOOGLE_SERVICE_ACCOUNT_KEY`
+7. Condividi il calendario con l'email del service account
+8. Inserisci l'ID del calendario in `GOOGLE_CALENDAR_ID`
 
-- **URL:** `http://localhost:3000/admin`
-- **Password:** `Preturo2024!`
-
-## 📋 Struttura Progetto
-
-```
-beach_volley/
-├── public/                 # Frontend
-│   ├── index.html         # Pagina principale prenotazioni
-│   ├── admin.html         # Dashboard amministratore
-│   ├── admin-login.html   # Login admin
-│   ├── styles.css         # Stili CSS
-│   └── script.js          # JavaScript frontend
-├── server/                # Backend
-│   ├── server.js          # Server Express
-│   └── database.js        # Gestione database SQLite
-├── database/              # Database SQLite
-├── package.json           # Dipendenze Node.js
-└── README.md             # Documentazione
+### 4. Test locale
+```bash
+npm run dev
 ```
 
-## 💰 Prezzi
+### 5. Deploy su Netlify
 
-- **Over 18:** €4 per persona/ora
-- **Under 18:** €3 per persona/ora
+#### Opzione A: Deploy automatico
+1. Collega il repository a Netlify
+2. Configura le variabili d'ambiente in Netlify Dashboard
+3. Deploy automatico ad ogni push
 
-## 🕒 Orari
-
-- **Apertura:** Tutti i giorni dalle 16:00 alle 23:00
-- **Slot:** 1 ora per prenotazione
-- **Max giocatori:** 12 per slot
-
-## 📍 Indirizzo
-
-**Via Giovanni Palatucci 2 - 83025 Montoro(AV) Fraz. Preturo**
-
-## 📞 Contatti
-
-- **Marco:** +39 342 700 4105
-- **Luigi:** +39 339 175 9103
-- **Instagram:** [@summer_beachvolley_preturo](https://www.instagram.com/summer_beachvolley_preturo)
-
-## 🔧 Personalizzazione
-
-### Cambiare Password Admin
-Modifica il file `public/admin-login.html` alla riga 85:
-```javascript
-if (password === 'Preturo2024!') {
+#### Opzione B: Deploy manuale
+```bash
+npm run deploy
 ```
 
-### Cambiare Numero WhatsApp
-Modifica il file `public/script.js` alla riga 320:
-```javascript
-const gestoreNumber = config.contattoMarco || '+393427004105';
+## 🔧 Configurazione Netlify
+
+### Variabili d'ambiente da impostare in Netlify Dashboard:
+
+```
+MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/beach_volley
+GOOGLE_SERVICE_ACCOUNT_KEY={"type":"service_account",...}
+GOOGLE_CALENDAR_ID=your_calendar_id@group.calendar.google.com
+ADMIN_PASSWORD=beachvolley2024
+NODE_ENV=production
 ```
 
-## 📱 Utilizzo
+### Build settings:
+- **Build command**: `npm install`
+- **Publish directory**: `public`
+- **Functions directory**: `functions`
 
-1. **Prenotazione:** Vai su `/` e seleziona data/orario
-2. **Admin:** Vai su `/admin` (password: `beachvolley2024`)
-3. **WhatsApp:** Clicca "Conferma" per aprire WhatsApp con messaggio preimpostato
+## 📱 API Endpoints
 
-## 🎨 Tecnologie
+### Configurazioni
+- `GET /api/config` - Ottieni configurazioni
+- `POST /api/config` - Aggiorna configurazione (admin)
 
-- **Frontend:** HTML5, CSS3, JavaScript (vanilla)
-- **Backend:** Node.js, Express
-- **Database:** SQLite
-- **WhatsApp:** Link diretto (gratuito)
-- **Maps:** Google Maps (link diretto) 
+### Prenotazioni
+- `GET /api/prenotazioni` - Ottieni prenotazioni
+- `POST /api/prenotazioni` - Crea prenotazione
+- `DELETE /api/prenotazioni/:id` - Cancella prenotazione
+
+### Disponibilità
+- `GET /api/disponibilita/:data` - Ottieni disponibilità per data
+- `GET /api/blocked-slots` - Ottieni slot bloccati
+- `POST /api/disponibilita/update` - Aggiorna status orario (admin)
+
+### Google Calendar
+- `POST /api/sync-calendar` - Sincronizza con Google Calendar
+
+### Health Check
+- `GET /api/health` - Status del servizio
+
+## 🎯 Funzionalità
+
+### Per gli utenti:
+- Visualizza disponibilità in tempo reale
+- Prenota slot con nome, telefono e numero giocatori
+- Riceve conferma automatica
+- Evento automaticamente aggiunto al calendario Google
+
+### Per gli admin:
+- Gestione slot bloccati/disponibili
+- Modifica configurazioni (prezzi, orari, contatti)
+- Visualizzazione tutte le prenotazioni
+- Sincronizzazione manuale con Google Calendar
+
+## 🔒 Sicurezza
+
+- Validazione input lato server
+- Rate limiting (gestito da Netlify)
+- CORS configurato
+- Password admin configurabile
+- Connessioni database sicure
+
+## 🚨 Troubleshooting
+
+### Problemi comuni:
+
+1. **Errore connessione MongoDB**
+   - Verifica la connection string
+   - Controlla che l'IP sia whitelistato in MongoDB Atlas
+
+2. **Errore Google Calendar**
+   - Verifica le credenziali del service account
+   - Controlla che il calendario sia condiviso con l'email del service account
+   - Verifica che l'ID del calendario sia corretto
+
+3. **Errore deploy Netlify**
+   - Controlla le variabili d'ambiente
+   - Verifica che il build command sia corretto
+   - Controlla i log di build
+
+## 📞 Supporto
+
+Per problemi o domande:
+- 📧 Email: [tua-email]
+- 📱 WhatsApp: [numero-telefono]
+
+## 📄 Licenza
+
+MIT License - vedi file LICENSE per dettagli. 

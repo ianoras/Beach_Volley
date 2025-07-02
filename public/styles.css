@@ -353,6 +353,8 @@ body {
     border-left: 4px solid #f57c00;
 }
 
+
+
 .no-selection {
     text-align: center;
     color: #666;
@@ -571,18 +573,37 @@ body {
     box-shadow: 0 8px 15px rgba(37, 211, 102, 0.2);
 }
 
+.btn-whatsapp-small {
+    background: #25d366;
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: var(--border-radius);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 500;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+    box-shadow: var(--shadow);
+}
+
+.btn-whatsapp-small:hover {
+    background: #128c7e;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-hover);
+}
+
+.btn-whatsapp-small:active {
+    transform: translateY(0);
+}
+
 /* WhatsApp Section */
 .whatsapp-section {
     margin-top: 1.5rem;
-    padding: 1.5rem;
-    background: #f8f9fa;
-    border-radius: var(--border-radius);
+    padding: 1rem;
     text-align: center;
-}
-
-.whatsapp-section p {
-    margin-bottom: 1rem;
-    color: var(--dark-color);
 }
 
 /* Modal */
@@ -730,6 +751,50 @@ body {
     display: flex;
     align-items: center;
     gap: 0.5rem;
+}
+
+/* Stili per i link del footer */
+.footer-link {
+    color: #3498db;
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.footer-link:hover {
+    color: #2980b9;
+    text-decoration: underline;
+}
+
+/* Link Instagram rosso */
+.footer-contact a {
+    color: #e74c3c;
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.footer-contact a:hover {
+    color: #c0392b;
+    text-decoration: underline;
+}
+
+/* Numeri di telefono bianchi */
+.footer-contact a[href^="tel:"] {
+    color: white;
+}
+
+.footer-contact a[href^="tel:"]:hover {
+    color: #f0f0f0;
+    text-decoration: underline;
+}
+
+/* Icone telefono blu */
+.footer-contact p:has(a[href^="tel:"]) i {
+    color: #3498db;
+}
+
+/* Icona Instagram rossa */
+.footer-contact p:has(a[href*="instagram"]) i {
+    color: #e74c3c;
 }
 
 /* Responsive Design */
@@ -1026,31 +1091,7 @@ body {
     }
 }
 
-/* Admin Section */
-.admin-section {
-    padding: 4rem 0;
-    background: white;
-}
 
-.admin-container {
-    max-width: 1200px;
-    margin: 0 auto;
-}
-
-.admin-header {
-    text-align: center;
-    margin-bottom: 3rem;
-}
-
-.admin-header h2 {
-    color: var(--dark-color);
-    margin-bottom: 0.5rem;
-}
-
-.admin-header p {
-    color: #666;
-    font-size: 1.1rem;
-}
 
 /* Stats Section */
 .stats-section {

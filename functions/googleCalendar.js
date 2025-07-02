@@ -59,12 +59,14 @@ async function createCalendarEvent(prenotazione) {
         const calendar = await getCalendar();
         const calendarId = process.env.GOOGLE_CALENDAR_ID || 'primary';
         
-        // Converti data e orario in formato ISO
+        // Converti data e orario in formato ISO con fuso orario corretto
         const [year, month, day] = prenotazione.data.split('-');
         const [hour, minute] = prenotazione.orario.split(':');
         
-        const startDateTime = new Date(year, month - 1, day, hour, minute);
-        const endDateTime = new Date(startDateTime.getTime() + 60 * 60 * 1000); // +1 ora
+        // Crea date con fuso orario italiano (CEST/CET)
+        const startDateTime = new Date(`${year}-${month}-${day}T${hour}:${minute}:00+02:00`);
+        const endHour = (parseInt(hour) + 1).toString().padStart(2, '0');
+        const endDateTime = new Date(`${year}-${month}-${day}T${endHour}:${minute}:00+02:00`);
         
         const event = {
             summary: `🏐 Beach Volley - ${prenotazione.nome}`,
@@ -119,12 +121,14 @@ async function updateCalendarEvent(eventId, prenotazione) {
         const calendar = await getCalendar();
         const calendarId = process.env.GOOGLE_CALENDAR_ID || 'primary';
         
-        // Converti data e orario in formato ISO
+        // Converti data e orario in formato ISO con fuso orario corretto
         const [year, month, day] = prenotazione.data.split('-');
         const [hour, minute] = prenotazione.orario.split(':');
         
-        const startDateTime = new Date(year, month - 1, day, hour, minute);
-        const endDateTime = new Date(startDateTime.getTime() + 60 * 60 * 1000); // +1 ora
+        // Crea date con fuso orario italiano (CEST/CET)
+        const startDateTime = new Date(`${year}-${month}-${day}T${hour}:${minute}:00+02:00`);
+        const endHour = (parseInt(hour) + 1).toString().padStart(2, '0');
+        const endDateTime = new Date(`${year}-${month}-${day}T${endHour}:${minute}:00+02:00`);
         
         const event = {
             summary: `🏐 Beach Volley - ${prenotazione.nome}`,
@@ -261,6 +265,7 @@ async function getBlockedSlots(data) {
             summary: e.summary,
             colorId: e.colorId,
             start: e.start.dateTime,
+            startLocal: new Date(e.start.dateTime).toLocaleString('it-IT', {timeZone: 'Europe/Rome'}),
             id: e.id
         })));
         
@@ -289,8 +294,11 @@ async function getBlockedSlots(data) {
             console.log(`🔍 Evento "${event.summary}" occupa slot? ${isOccupiedSlot}`);
             
             if (isOccupiedSlot) {
+                // Gestione corretta del fuso orario
                 const startTime = new Date(event.start.dateTime);
-                const orario = `${startTime.getHours().toString().padStart(2, '0')}:${startTime.getMinutes().toString().padStart(2, '0')}`;
+                // Converti in ora locale italiana
+                const localTime = new Date(startTime.toLocaleString("en-US", {timeZone: "Europe/Rome"}));
+                const orario = `${localTime.getHours().toString().padStart(2, '0')}:${localTime.getMinutes().toString().padStart(2, '0')}`;
                 
                 blockedSlots.push({
                     orario,
@@ -337,12 +345,14 @@ async function createBlockedSlot(data, orario, motivo = 'Slot bloccato') {
         const calendar = await getCalendar();
         const calendarId = process.env.GOOGLE_CALENDAR_ID || 'primary';
         
-        // Converti data e orario in formato ISO
+        // Converti data e orario in formato ISO con fuso orario corretto
         const [year, month, day] = data.split('-').map(Number);
         const [hour, minute] = orario.split(':').map(Number);
         
-        const startDateTime = new Date(year, month - 1, day, hour, minute);
-        const endDateTime = new Date(startDateTime.getTime() + 60 * 60 * 1000); // +1 ora
+        // Crea date con fuso orario italiano (CEST/CET)
+        const startDateTime = new Date(`${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}T${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}:00+02:00`);
+        const endHour = (hour + 1).toString().padStart(2, '0');
+        const endDateTime = new Date(`${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}T${endHour}:${minute.toString().padStart(2, '0')}:00+02:00`);
         
         const event = {
             summary: `🚫 BLOCCATO - ${motivo}`,
